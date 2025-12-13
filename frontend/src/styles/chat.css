@@ -1,0 +1,166 @@
+/* Overall layout */
+.zyra-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #020617; /* dark navy */
+  color: #e5e7eb; /* light gray */
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+}
+
+/* Header */
+.zyra-header {
+  border-bottom: 1px solid #1f2937;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.zyra-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.zyra-logo {
+  font-size: 22px;
+}
+
+.zyra-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.zyra-subtitle {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.zyra-header-right {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* Main area */
+.zyra-main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 12px 8px;
+}
+
+.zyra-chat-container {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: calc(100vh - 80px);
+}
+
+/* Message list */
+.zyra-messages {
+  flex: 1;
+  border: 1px solid #1f2937;
+  border-radius: 16px;
+  padding: 8px;
+  background-color: rgba(15, 23, 42, 0.7);
+  overflow-y: auto;
+}
+
+/* Single message row */
+.msg-row {
+  display: flex;
+  margin-bottom: 6px;
+}
+
+.msg-row-user {
+  justify-content: flex-end;
+}
+
+.msg-row-tutor {
+  justify-content: flex-start;
+}
+
+/* Message bubbles */
+.msg-bubble {
+  max-width: 80%;
+  border-radius: 16px;
+  padding: 6px 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  font-size: 13px;
+}
+
+.msg-user {
+  background-color: #2563eb; /* blue */
+  color: #ffffff;
+}
+
+.msg-tutor {
+  background-color: #111827; /* dark gray */
+  color: #e5e7eb;
+}
+
+/* Message label */
+.msg-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+  margin-bottom: 2px;
+}
+
+/* Message text */
+.msg-text {
+  white-space: pre-wrap;
+}
+
+.msg-typing {
+  opacity: 0.7;
+  font-style: italic;
+}
+
+/* Input row */
+.msg-input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  border: 1px solid #1f2937;
+  border-radius: 16px;
+  padding: 8px;
+  background-color: rgba(15, 23, 42, 0.85);
+}
+
+.msg-textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  resize: none;
+  outline: none;
+  color: #e5e7eb;
+  font-size: 13px;
+  font-family: inherit;
+  max-height: 96px;
+}
+
+.msg-textarea::placeholder {
+  color: #6b7280;
+}
+
+.msg-send-btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: none;
+  background-color: #2563eb;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.msg-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
