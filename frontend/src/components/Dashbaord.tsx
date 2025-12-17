@@ -67,7 +67,7 @@ const Dashboard: React.FC = () => {
             <button className="go-btn">→</button>
           </div>
 
-          <p className="nepali-text">केही मिठो पाठ पढ! 📚</p>
+          <p className="nepali-text">केही मिठो पाठ पढ! </p>
 
           <div className="section-label">Choose Your Topic</div>
           <TopicGrid topics={topics} />

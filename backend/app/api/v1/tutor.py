@@ -1,35 +1,45 @@
-# app/api/v1/tutor.py
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
+from typing import Optional, List, Dict
 
-from fastapi import APIRouter
-from pydantic import BaseModel
-from app.rag.money_exchange import answer_money_exchange_query
+from app.services.tutor_service import tutor_service
 
 router = APIRouter(prefix="/tutor", tags=["AI Tutor"])
 
 
-# ---------------------------
-# Request Body Model
-# ---------------------------
 class TutorQuery(BaseModel):
-    query: str
-    chapter: str = "money_exchange"   
+    query: str = Field(..., description="Student's question")
+    chapter: Optional[str] = Field(None, description="Chapter context (e.g., 'money_exchange')")
+    conversation_history: Optional[List[Dict]] = Field(None, description="Previous messages")
 
 
-# ---------------------------
-# Tutor Route
-# ---------------------------
-@router.post("/ask")
+class TutorResponse(BaseModel):
+    reply: str
+    intent: str
+    used_rag: bool
+    sources: Optional[List[Dict]] = None
+
+
+@router.post("/ask", response_model=TutorResponse)
 async def ask_tutor(payload: TutorQuery):
     """
-    Main endpoint for student → Zyra tutor communication.
+    Main endpoint for student queries.
+    
+    - **query**: The student's question
+    - **chapter**: Optional chapter filter (e.g., "money_exchange", "sets", "geometry")
+    - **conversation_history**: Optional previous messages for context
     """
-    user_query = payload.query
-    chapter = payload.chapter.lower()
-
-    # For now, only Money Exchange is implemented
-    if chapter == "money_exchange":
-        response = answer_money_exchange_query(user_query)
-    else:
-        response = f"Sorry, the chapter '{chapter}' is not available yet."
-
-    return {"reply": response}
+    try:
+        result = tutor_service.ask_question(
+            query=payload.query,
+            chapter=payload.chapter,
+            conversation_history=payload.conversation_history
+        )
+        
+        return TutorResponse(**result)
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing query: {str(e)}"
+        )

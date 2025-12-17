@@ -39,7 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({ recentChats = [] }) => {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <span className="logo-icon">📚</span>
+        <span className="logo-icon"></span>
         <h2 className="logo">Zyra</h2>
       </div>
 
