@@ -1,20 +1,72 @@
+"""
+Application Configuration
+Merges best from both repos
+"""
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
+from functools import lru_cache
+
 
 class Settings(BaseSettings):
-    APP_NAME: str = "Zyra API"
-    ENV: str = "dev"
+    # -----------------------------
+    # PROJECT CONFIG
+    # -----------------------------
+    PROJECT_NAME: str = "Zyra RAG System"
+    ENV: str = "development"  # development / production
     API_PREFIX: str = "/api/v1"
-    CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]
-
-    # Add your Google API key here
+    
+    # -----------------------------
+    # CORS
+    # -----------------------------
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://localhost:8000"
+    ]
+    
+    # -----------------------------
+    # DATABASE
+    # -----------------------------
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:bijaya201542@localhost:5432/zyra_rag"
+    
+    # -----------------------------
+    # LLM & EMBEDDINGS
+    # -----------------------------
     GOOGLE_API_KEY: str
-
-    # Allow loading from .env file
+    
+    # LLM Models
+    LLM_MODEL: str = "gemini-2.0-flash-exp"
+    LLM_TEMPERATURE: float = 0.3
+    
+    # Embedding Models
+    EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
+    
+    # -----------------------------
+    # RAG CONFIG
+    # -----------------------------
+    CHUNK_SIZE: int = 400
+    CHUNK_OVERLAP: int = 60
+    MIN_CHUNK_SIZE: int = 128
+    RETRIEVAL_K: int = 4
+    MAX_CONTEXT_LENGTH: int = 3000
+    
+    # -----------------------------
+    # STORAGE
+    # -----------------------------
+    STORAGE_PATH: str = "storage/documents"
+    VECTORSTORE_PATH: str = "storage/vectorstore"
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        extra="allow"   # <-- Important: Prevents Extra Inputs Error
+        extra="allow"
     )
 
-settings = Settings()
+
+@lru_cache()
+def get_settings() -> Settings:
+    """Cached settings instance"""
+    return Settings()
+
+
+settings = get_settings()
