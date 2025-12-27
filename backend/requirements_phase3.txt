@@ -1,0 +1,20 @@
+# Phase 3: RAG + Database Integration Dependencies
+
+# PDF Processing
+PyPDF2==3.0.1
+
+# Embeddings
+sentence-transformers==2.2.2
+
+# Vector Search
+faiss-cpu==1.7.4
+
+# Already have from Phase 1 & 2:
+# fastapi
+# uvicorn
+# sqlalchemy
+# asyncpg
+# langchain
+# google-generativeai
+# pydantic
+# python-multipart  # For file uploads
