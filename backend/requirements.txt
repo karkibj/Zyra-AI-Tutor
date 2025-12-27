@@ -1,29 +1,20 @@
-# fastapi==0.115.2
-# uvicorn[standard]==0.30.6
-# pydantic-settings==2.4.0
-# python-dotenv==1.0.1
-# loguru==0.7.2
+# Phase 3: RAG + Database Integration Dependencies
 
+# PDF Processing
+PyPDF2==3.0.1
+
+# Embeddings
+sentence-transformers==2.2.2
+
+# Vector Search
+faiss-cpu==1.7.4
+
+# Already have from Phase 1 & 2:
 # fastapi
-# uvicorn[standard]
-
-langchain
-langchain-core
-langchain-community
-langchain-text-splitters
-langchain-google-genai
-langchain-huggingface
-
-google-generativeai
-huggingface-hub
-sentence-transformers
-
-chromadb
-
-python-dotenv
-pydantic
-httpx
-tiktoken
-
-docx2txt
-python-docx
+# uvicorn
+# sqlalchemy
+# asyncpg
+# langchain
+# google-generativeai
+# pydantic
+# python-multipart  # For file uploads
