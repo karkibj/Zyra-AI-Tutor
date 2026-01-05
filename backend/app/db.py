@@ -1,7 +1,7 @@
 """
 Database Handshake File
 -----------------------
-Async SQLAlchemy setup with all models imported
+Async SQLAlchemy setup with NEW models only
 """
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -10,18 +10,25 @@ from app.core.config import settings
 # Import Base
 from app.models.base import Base
 
-# Import ALL models (this registers them with Base.metadata)
+# Import NEW models ONLY (this registers them with Base.metadata)
 import app.models.user
-import app.models.exam
-import app.models.subject
-import app.models.chapter
-import app.models.documents
-import app.models.document_chunk
-import app.models.chunk_embeddings
-import app.models.question
-import app.models.attempt
-import app.models.chat_session
-import app.models.chat_message
+import app.models.content
+import app.models.curriculum
+import app.models.extracted_item
+import app.models.exam_spec
+import app.models.processing_queue
+
+# OLD models removed - they're renamed to .old files
+# import app.models.exam
+# import app.models.subject
+# import app.models.chapter
+# import app.models.document
+# import app.models.document_chunk
+# import app.models.chunk_embedding
+# import app.models.question
+# import app.models.attempt
+# import app.models.chat_session
+# import app.models.chat_message
 
 # -----------------------------
 # ASYNC ENGINE

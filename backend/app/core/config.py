@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     GOOGLE_API_KEY: str
     
     # LLM Models
-    LLM_MODEL: str = "gemini-2.0-flash-exp"
+    LLM_MODEL: str = "gemini-2.5-flash"
     LLM_TEMPERATURE: float = 0.3
     
     # Embedding Models
@@ -61,6 +61,15 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="allow"
     )
+
+    SECRET_KEY: str = "your-secret-key-change-this-in-production" 
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
+    
+    # Google OAuth (Optional - leave empty if not using)
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/google/callback"
 
 
 @lru_cache()
