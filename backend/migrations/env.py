@@ -7,43 +7,28 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from dotenv import load_dotenv
 
-# Import your Base and models
-from app.models.base import Base
-from app.models import (
-    user,
-    exam,
-    subject,
-    chapter,
-    document,
-    document_chunk,
-    chunk_embedding,
-    question,
-    attempt,
-    chat_session,
-    chat_message,
-)
+from app.models import Base
+import app.models  # <-- THIS LINE IS IMPORTANT
 
-# this is the Alembic Config object, which provides access
-# to the values within the .ini file in use.
 config = context.config
 
-# Interpret the config file for Python logging.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Load env vars (DATABASE_URL)
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
-    config.set_main_option("sqlalchemy.url", DATABASE_URL)
+    SYNC_DATABASE_URL = DATABASE_URL.replace(
+        "postgresql+asyncpg",
+        "postgresql+psycopg2"
+    )
+    config.set_main_option("sqlalchemy.url", SYNC_DATABASE_URL)
 
-# This tells Alembic about your models' metadata
 target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode."""
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -57,9 +42,8 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode."""
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        config.get_section(config.config_ini_section),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
@@ -68,6 +52,7 @@ def run_migrations_online() -> None:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
+            compare_type=True,
         )
 
         with context.begin_transaction():
