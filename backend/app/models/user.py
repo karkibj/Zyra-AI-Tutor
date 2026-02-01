@@ -1,26 +1,35 @@
-from sqlalchemy import Column, String, Boolean, func
-from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
-from sqlalchemy.orm import relationship
-from app.models.base import Base
+"""
+User Model - Authentication & Authorization
+Compatible with existing database structure
+"""
 import uuid
+from sqlalchemy import Column, String, Boolean, DateTime
+from sqlalchemy.sql import func
+from app.models.base import Base  # CHANGED THIS LINE!
 
 
 class User(Base):
-    """User model for authentication and authorization"""
+    """User model for authentication"""
     __tablename__ = "users"
 
-    user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String, nullable=False)
-    email = Column(String, unique=True, nullable=False, index=True)
-    phone = Column(String, nullable=True)
-    role = Column(String, nullable=False)  # student, teacher, admin
+    # Primary Key (UUID string format for compatibility)
+    id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
+    
+    # Authentication
+    email = Column(String(150), unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=True)  # Null for Google OAuth users
+    
+    # Profile
+    full_name = Column(String(100), nullable=True)
+    picture = Column(String, nullable=True)  # Avatar URL (Google)
+    
+    # Authorization
+    role = Column(String(20), default="student", nullable=False)  # 'admin', 'teacher', 'student'
+    
+    # Provider tracking
+    provider = Column(String(50), default="local")  # 'local' or 'google'
+    
+    # Status
     is_active = Column(Boolean, default=True)
-    created_at = Column(TIMESTAMP(timezone=False), server_default=func.now())
-
-    # Relationships
-    documents = relationship("Document", back_populates="uploader")
-    chat_sessions = relationship("ChatSession", back_populates="user")
-    attempts = relationship("Attempt", back_populates="user")
-
-    def __repr__(self):
-        return f"<User(user_id={self.user_id}, name={self.name}, email={self.email}, role={self.role})>"
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
