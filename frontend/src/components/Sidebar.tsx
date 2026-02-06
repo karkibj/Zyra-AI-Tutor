@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { MessageSquare, TrendingUp, FileText, Plus } from 'lucide-react';
 import '../styles/Sidebar.css';
 
 interface RecentChat {
@@ -32,22 +33,56 @@ const Sidebar: React.FC<SidebarProps> = ({ recentChats = [] }) => {
     navigate('/progress');
   };
 
+  const handlePastPapers = () => {
+    navigate('/past-papers');
+  };
+
   const handleChatClick = (chatId: number) => {
     navigate(`/chat/${chatId}`);
   };
 
   return (
     <aside className="sidebar">
+      {/* Header / Logo */}
       <div className="sidebar-header">
-        <span className="logo-icon"></span>
+        <span className="logo-icon">Z</span>
         <h2 className="logo">Zyra</h2>
       </div>
 
+      {/* New Chat Button */}
       <button className="new-chat-btn" onClick={handleNewChat}>
-        <span style={{ marginRight: '6px' }}>💬</span>
+        <Plus size={18} />
         <span>New Chat</span>
       </button>
 
+      {/* Navigation Menu */}
+      <nav className="sidebar-nav">
+        <button 
+          className={`nav-btn ${location.pathname === '/chat' ? 'active' : ''}`}
+          onClick={handleNewChat}
+        >
+          <MessageSquare size={20} />
+          <span>AI Tutor</span>
+        </button>
+
+        <button 
+          className={`nav-btn ${location.pathname === '/past-papers' ? 'active' : ''}`}
+          onClick={handlePastPapers}
+        >
+          <FileText size={20} />
+          <span>Past Papers</span>
+        </button>
+
+        <button 
+          className={`nav-btn ${location.pathname === '/progress' ? 'active' : ''}`}
+          onClick={handleProgress}
+        >
+          <TrendingUp size={20} />
+          <span>My Progress</span>
+        </button>
+      </nav>
+
+      {/* Recent Chats */}
       <div className="recents-section">
         <h3 className="section-title">Recent Chats</h3>
         {chatsToDisplay.map(chat => (
@@ -60,11 +95,6 @@ const Sidebar: React.FC<SidebarProps> = ({ recentChats = [] }) => {
           </div>
         ))}
       </div>
-
-      <button className="progress-btn" onClick={handleProgress}>
-        <span style={{ marginRight: '6px' }}>📈</span>
-        <span>My Progress</span>
-      </button>
     </aside>
   );
 };
