@@ -1,182 +1,85 @@
 """
-Embedding Service - Async CRUD operations for chunk embeddings
+Embedding Service
+Generate vector embeddings for semantic search
 """
-from typing import List, Optional, Dict, Any
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete, func
-from sqlalchemy.orm import selectinload
-import uuid
+from typing import List, Dict
 import numpy as np
-
-from app.models.chunk_embeddings import ChunkEmbedding
+from sentence_transformers import SentenceTransformer
+import pickle
+from pathlib import Path
 
 
 class EmbeddingService:
-    """Service for managing chunk embeddings"""
-
-    @staticmethod
-    async def create_embedding(
-        db: AsyncSession,
-        chunk_id: uuid.UUID,
-        embedding_vector: List[float],
-        model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
-    ) -> ChunkEmbedding:
-        """Create a single embedding"""
-        embedding = ChunkEmbedding(
-            embedding_id=uuid.uuid4(),
-            chunk_id=chunk_id,
-            embedding_vector=embedding_vector,
-            model_name=model_name
+    """Generate and manage embeddings"""
+    
+    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
+        """
+        Initialize embedding model
+        
+        Args:
+            model_name: HuggingFace model name
+            - "all-MiniLM-L6-v2" (384 dim, fast, good quality) ← DEFAULT
+            - "all-mpnet-base-v2" (768 dim, slower, better quality)
+        """
+        self.model_name = model_name
+        self.model = None
+        self._load_model()
+    
+    def _load_model(self):
+        """Lazy load the model"""
+        if self.model is None:
+            print(f"📥 Loading embedding model: {self.model_name}...")
+            self.model = SentenceTransformer(self.model_name)
+            print(f"✅ Model loaded! Dimension: {self.model.get_sentence_embedding_dimension()}")
+    
+    def generate_embeddings(self, texts: List[str]) -> np.ndarray:
+        """
+        Generate embeddings for a list of texts
+        
+        Args:
+            texts: List of text strings
+            
+        Returns:
+            numpy array of shape (len(texts), embedding_dim)
+        """
+        if not texts:
+            return np.array([])
+        
+        # Encode texts
+        embeddings = self.model.encode(
+            texts,
+            show_progress_bar=True,
+            batch_size=32,
+            convert_to_numpy=True
         )
-        
-        db.add(embedding)
-        await db.commit()
-        await db.refresh(embedding)
-        return embedding
-
-    @staticmethod
-    async def create_embeddings_batch(
-        db: AsyncSession,
-        embeddings_data: List[Dict[str, Any]]
-    ) -> List[ChunkEmbedding]:
-        """Create multiple embeddings in a batch (more efficient)"""
-        embeddings = []
-        for emb_data in embeddings_data:
-            embedding = ChunkEmbedding(
-                embedding_id=uuid.uuid4(),
-                chunk_id=emb_data["chunk_id"],
-                embedding_vector=emb_data["embedding_vector"],
-                model_name=emb_data.get("model_name", "sentence-transformers/all-MiniLM-L6-v2")
-            )
-            embeddings.append(embedding)
-        
-        db.add_all(embeddings)
-        await db.commit()
-        
-        # Refresh all embeddings
-        for embedding in embeddings:
-            await db.refresh(embedding)
         
         return embeddings
-
-    @staticmethod
-    async def get_embedding(db: AsyncSession, embedding_id: uuid.UUID) -> Optional[ChunkEmbedding]:
-        """Get an embedding by ID"""
-        stmt = select(ChunkEmbedding).where(ChunkEmbedding.embedding_id == embedding_id)
-        result = await db.execute(stmt)
-        return result.scalar_one_or_none()
-
-    @staticmethod
-    async def get_embedding_by_chunk(db: AsyncSession, chunk_id: uuid.UUID) -> Optional[ChunkEmbedding]:
-        """Get embedding for a specific chunk"""
-        stmt = select(ChunkEmbedding).where(ChunkEmbedding.chunk_id == chunk_id)
-        result = await db.execute(stmt)
-        return result.scalar_one_or_none()
-
-    @staticmethod
-    async def get_embedding_with_chunk(db: AsyncSession, chunk_id: uuid.UUID) -> Optional[ChunkEmbedding]:
-        """Get embedding with its chunk loaded"""
-        stmt = (
-            select(ChunkEmbedding)
-            .options(selectinload(ChunkEmbedding.chunk))
-            .where(ChunkEmbedding.chunk_id == chunk_id)
-        )
-        result = await db.execute(stmt)
-        return result.scalar_one_or_none()
-
-    @staticmethod
-    async def get_embeddings_by_document(
-        db: AsyncSession,
-        document_id: uuid.UUID
-    ) -> List[ChunkEmbedding]:
-        """Get all embeddings for a document's chunks"""
-        from app.models.document_chunk import DocumentChunk
-        
-        stmt = (
-            select(ChunkEmbedding)
-            .join(DocumentChunk, ChunkEmbedding.chunk_id == DocumentChunk.chunk_id)
-            .where(DocumentChunk.document_id == document_id)
-            .options(selectinload(ChunkEmbedding.chunk))
-            .order_by(DocumentChunk.chunk_index)
-        )
-        
-        result = await db.execute(stmt)
-        return list(result.scalars().all())
-
-    @staticmethod
-    async def get_all_embeddings_for_search(
-        db: AsyncSession,
-        document_id: Optional[uuid.UUID] = None,
-        limit: Optional[int] = None
-    ) -> List[ChunkEmbedding]:
+    
+    def generate_embedding(self, text: str) -> np.ndarray:
         """
-        Get all embeddings for similarity search
-        Used to build FAISS index or perform search
-        """
-        from app.models.document_chunk import DocumentChunk
+        Generate embedding for a single text
         
-        stmt = (
-            select(ChunkEmbedding)
-            .join(DocumentChunk, ChunkEmbedding.chunk_id == DocumentChunk.chunk_id)
-            .options(selectinload(ChunkEmbedding.chunk))
-        )
-        
-        if document_id:
-            stmt = stmt.where(DocumentChunk.document_id == document_id)
-        
-        if limit:
-            stmt = stmt.limit(limit)
-        
-        result = await db.execute(stmt)
-        return list(result.scalars().all())
-
-    @staticmethod
-    async def delete_embedding(db: AsyncSession, embedding_id: uuid.UUID) -> bool:
-        """Delete an embedding"""
-        stmt = delete(ChunkEmbedding).where(ChunkEmbedding.embedding_id == embedding_id)
-        result = await db.execute(stmt)
-        await db.commit()
-        return result.rowcount > 0
-
-    @staticmethod
-    async def delete_embeddings_by_chunk(db: AsyncSession, chunk_id: uuid.UUID) -> bool:
-        """Delete embedding for a specific chunk"""
-        stmt = delete(ChunkEmbedding).where(ChunkEmbedding.chunk_id == chunk_id)
-        result = await db.execute(stmt)
-        await db.commit()
-        return result.rowcount > 0
-
-    @staticmethod
-    async def count_embeddings(
-        db: AsyncSession,
-        document_id: Optional[uuid.UUID] = None
-    ) -> int:
-        """Count embeddings with optional document filter"""
-        if document_id:
-            from app.models.document_chunk import DocumentChunk
+        Args:
+            text: Single text string
             
-            stmt = (
-                select(func.count(ChunkEmbedding.embedding_id))
-                .join(DocumentChunk, ChunkEmbedding.chunk_id == DocumentChunk.chunk_id)
-                .where(DocumentChunk.document_id == document_id)
-            )
-        else:
-            stmt = select(func.count(ChunkEmbedding.embedding_id))
-        
-        result = await db.execute(stmt)
-        return result.scalar_one()
+        Returns:
+            numpy array of shape (embedding_dim,)
+        """
+        embedding = self.model.encode(text, convert_to_numpy=True)
+        return embedding
+    
+    @property
+    def embedding_dimension(self) -> int:
+        """Get embedding dimension"""
+        return self.model.get_sentence_embedding_dimension()
 
-    @staticmethod
-    def calculate_cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
-        """Calculate cosine similarity between two vectors (utility function)"""
-        vec1_np = np.array(vec1)
-        vec2_np = np.array(vec2)
-        
-        dot_product = np.dot(vec1_np, vec2_np)
-        norm1 = np.linalg.norm(vec1_np)
-        norm2 = np.linalg.norm(vec2_np)
-        
-        if norm1 == 0 or norm2 == 0:
-            return 0.0
-        
-        return float(dot_product / (norm1 * norm2))
+
+# Global instance (singleton pattern)
+_embedding_service = None
+
+def get_embedding_service() -> EmbeddingService:
+    """Get global embedding service instance"""
+    global _embedding_service
+    if _embedding_service is None:
+        _embedding_service = EmbeddingService()
+    return _embedding_service
