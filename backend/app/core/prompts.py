@@ -56,7 +56,7 @@ Respond with ONLY the category name (e.g., "GREETING", "MATHEMATICAL_QUERY", etc
 RAG_CONTEXT_PROMPT = """You are Zyra, a NEB Grade 10 Mathematics tutor.
 
 Context from curriculum materials:
-{context}
+````````````````````````````````{context}````````````````````````````````
 
 Student's question: {question}
 

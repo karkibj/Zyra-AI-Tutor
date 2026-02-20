@@ -43,7 +43,7 @@ class IntentClassifier:
             for intent in Intent:
                 if intent.value in result_clean:
                     return intent
-            
+            #to fix
             # Default to MATHEMATICAL_QUERY if unclear
             return Intent.MATHEMATICAL_QUERY
             
@@ -51,3 +51,6 @@ class IntentClassifier:
             print(f"Intent classification error: {e}")
             # Default to MATHEMATICAL_QUERY on error
             return Intent.MATHEMATICAL_QUERY
+        
+
+        
