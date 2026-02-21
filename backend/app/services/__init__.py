@@ -1,16 +1,17 @@
 """
-Services package for Zyra RAG System
-Provides async CRUD operations for all models
+Services Package
+NEW architecture services only
 """
-
-from app.services.document_service import DocumentService
-from app.services.chunk_service import ChunkService
-from app.services.embedding_service import EmbeddingService
-from app.services.chat_service import ChatService
+from app.services.text_extraction_service import TextExtractionService
+from app.services.embedding_service import get_embedding_service
+from app.services.vector_store_service import get_vector_store
+from app.services.content_processing_service import ContentProcessingService
+from app.services.langgraph_rag_service import get_langgraph_rag_service
 
 __all__ = [
-    "DocumentService",
-    "ChunkService", 
-    "EmbeddingService",
-    "ChatService",
+    "TextExtractionService",
+    "get_embedding_service",
+    "get_vector_store",
+    "ContentProcessingService",
+    "get_langgraph_rag_service",
 ]
