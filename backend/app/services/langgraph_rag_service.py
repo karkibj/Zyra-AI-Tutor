@@ -1,6 +1,6 @@
 """
 LangGraph RAG Service - No database dependencies
-Works without chat history persistence
+Works without chat history persistence + Progress Tracking Support
 """
 import uuid
 from typing import List, Dict, Any, Optional
@@ -20,6 +20,7 @@ class LangGraphRAGService:
     async def ask(
         self,
         question: str,
+        user_id: Optional[str] = None,  #  Added for progress tracking
         chapter_filter: Optional[str] = None,
         session_id: Optional[str] = None,
         conversation_history: Optional[List[Dict[str, str]]] = None
@@ -27,12 +28,23 @@ class LangGraphRAGService:
         """
         Ask a question using LangGraph multi-agent workflow
         NO DATABASE CHAT HISTORY (for now)
+        
+        Args:
+            question: The student's question
+            user_id: User ID for progress tracking (optional, defaults to "anonymous")
+            chapter_filter: Filter by specific chapter
+            session_id: Session identifier
+            conversation_history: Previous conversation messages
         """
         start_time = datetime.now()
         
         # Generate session ID if not provided
         if not session_id:
             session_id = str(uuid.uuid4())
+        
+        # Default user_id if not provided (for anonymous/testing)
+        if not user_id:
+            user_id = "anonymous"
         
         # Get conversation history from memory
         if not conversation_history and session_id in self.sessions:
@@ -53,14 +65,14 @@ class LangGraphRAGService:
         # Create initial state
         initial_state = AgentState(
             question=question,
-            user_id="anonymous",
+            user_id=user_id,  # ✅ Pass user_id for progress tracking
             session_id=session_id,
             chapter_filter=chapter_filter,
             conversation_history=history_messages
         )
         
-        # Run through LangGraph workflow
-        final_state = self.workflow.invoke(initial_state)
+        # ✅ CRITICAL: Use ainvoke for async workflow (tutor_agent is now async)
+        final_state = await self.workflow.ainvoke(initial_state)
         
         # Handle both dict and object returns from LangGraph
         if isinstance(final_state, dict):
@@ -119,7 +131,8 @@ class LangGraphRAGService:
                 "agent_path": agent_path,
                 "curriculum_check": curriculum_check,
                 "examples_provided": len(examples),
-                "practice_offered": len(practice_questions) > 0
+                "practice_offered": len(practice_questions) > 0,
+                "user_id": user_id  
             }
         }
     
@@ -144,7 +157,13 @@ class LangGraphRAGService:
                 "practice_suggester",
                 "response_compiler"
             ],
-            "active_sessions": len(self.sessions)
+            "active_sessions": len(self.sessions),
+            "features": [
+                "multi_agent_workflow",
+                "context_retrieval",
+                "curriculum_alignment",
+                "progress_tracking"  # ✅ New feature
+            ]
         }
 
 

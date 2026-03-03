@@ -15,42 +15,30 @@ class Intent(str, Enum):
 
 
 class IntentClassifier:
-    """Classifies user intent to route to appropriate handler."""
-    
+    """Classifies user intent — lazy LLM init to support key rotation."""
+
     def __init__(self):
-        self.llm = get_llm(temperature=0.1)  # Low temperature for consistent classification
         self.prompt = ChatPromptTemplate.from_messages([
             ("system", INTENT_CLASSIFIER_PROMPT),
             ("human", "{user_message}")
         ])
-        self.chain = self.prompt | self.llm | StrOutputParser()
-    
+        # Don't build chain at init — build fresh per call for key rotation
+
     def classify(self, user_message: str) -> Intent:
-        """
-        Classify user intent.
-        
-        Args:
-            user_message: The user's input message
-            
-        Returns:
-            Intent enum value
-        """
+        """Classify user intent."""
         try:
-            result = self.chain.invoke({"user_message": user_message})
+            # Build chain fresh each call — picks best available API key
+            llm = get_llm(temperature=0.1)
+            chain = self.prompt | llm | StrOutputParser()
+            result = chain.invoke({"user_message": user_message})
             result_clean = result.strip().upper()
-            
-            # Try to match to Intent enum
+
             for intent in Intent:
                 if intent.value in result_clean:
                     return intent
-            #to fix
-            # Default to MATHEMATICAL_QUERY if unclear
+
             return Intent.MATHEMATICAL_QUERY
-            
+
         except Exception as e:
             print(f"Intent classification error: {e}")
-            # Default to MATHEMATICAL_QUERY on error
             return Intent.MATHEMATICAL_QUERY
-        
-
-        

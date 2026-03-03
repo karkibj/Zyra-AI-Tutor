@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     # LLM & EMBEDDINGS
     # -----------------------------
     GOOGLE_API_KEY: str
+    GOOGLE_API_KEYS: str = ""  # Comma-separated pool: key1,key2,key3
     
     # LLM Models
     LLM_MODEL: str = "gemini-2.5-flash"
