@@ -18,7 +18,7 @@ class CurriculumNode(Base):
     parent_id = Column(UUID(as_uuid=True), ForeignKey('curriculum_nodes.id'), nullable=True, index=True)
     order_num = Column(Integer, nullable=False, default=0)
 
-    node_metadata = Column("metadata", JSON, nullable=True)  # ✅ FIXED
+    node_metadata = Column("metadata", JSON, nullable=True)  
 
     active = Column(Boolean, default=True, index=True)
     effective_from = Column(DateTime(timezone=True), nullable=True)
@@ -52,7 +52,7 @@ class ContentCurriculumMapping(Base):
     
     content_id = Column(UUID(as_uuid=True), ForeignKey('content.id', ondelete='CASCADE'), primary_key=True)
     curriculum_node_id = Column(UUID(as_uuid=True), ForeignKey('curriculum_nodes.id', ondelete='CASCADE'), primary_key=True)
-    relevance_score = Column(Float, default=1.0)  # ✅ CORRECT (uppercase Float)
+    relevance_score = Column(Float, default=1.0)  
     tags = Column(JSON, nullable=True)
     mapping_type = Column(String(50), default='primary')
     notes = Column(Text, nullable=True)

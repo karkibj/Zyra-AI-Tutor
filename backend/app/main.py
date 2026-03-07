@@ -3,7 +3,7 @@ FastAPI Application - Zyra AI Tutor Backend
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.sessions import SessionMiddleware  # ADD THIS!
+from starlette.middleware.sessions import SessionMiddleware
 from contextlib import asynccontextmanager
 
 from app.core.config import settings
@@ -32,7 +32,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Zyra AI Tutor API",
         description="AI-Powered Math Tutor with Authentication & LangGraph Multi-Agent System",
-        version="2.1.0",
+        version="2.2.0",
         lifespan=lifespan
     )
 
@@ -46,13 +46,13 @@ def create_app() -> FastAPI:
         expose_headers=["*"],
     )
     
-    # SESSION MIDDLEWARE (NEW - Required for Google OAuth!)
+    # SESSION MIDDLEWARE (Required for Google OAuth!)
     app.add_middleware(
        SessionMiddleware,
        secret_key=settings.SECRET_KEY,
-       max_age=3600,  # Session expires after 1 hour
-       same_site="lax",  # Changed from default
-       https_only=False,  # Set to False for localhost development
+       max_age=3600,
+       same_site="lax",
+       https_only=False,
     )
 
     # Import routers
@@ -60,25 +60,34 @@ def create_app() -> FastAPI:
     from app.api.v1.auth import router as auth_router
     from app.api.v1.tutor import router as tutor_router
     from app.api.v1.admin import router as admin_router
+    from app.api.v1.practice import router as practice_router
+    from app.api.v1.progress import router as progress_router
+    from app.api.v1.chat_history import router as chat_history_router  # ✅ NEW
+    
 
     # Register routes
     app.include_router(health.router, prefix=settings.API_PREFIX, tags=["Health"])
     app.include_router(auth_router, prefix=settings.API_PREFIX)
     app.include_router(tutor_router, prefix=settings.API_PREFIX)
     app.include_router(admin_router, prefix=settings.API_PREFIX)
+    app.include_router(practice_router, prefix=settings.API_PREFIX)
+    app.include_router(progress_router, prefix=settings.API_PREFIX)
+    app.include_router(chat_history_router, prefix=settings.API_PREFIX)  # ✅ NEW
 
     @app.get("/")
     def root():
         return {
             "message": "Zyra AI Tutor API",
-            "version": "2.1.0",
+            "version": "2.2.0",
             "status": "operational",
             "features": [
                 "🔐 User Authentication (JWT + OAuth)",
                 "🤖 LangGraph Multi-Agent Workflow",
                 "📚 Intelligent Content Management",
                 "🔍 Vector-based RAG System",
-                "💬 Real-time Tutoring"
+                "💬 Real-time Tutoring",
+                "📊 Progress Tracking",
+                "💾 Chat History"  # ✅ NEW
             ],
             "endpoints": {
                 "health": f"{settings.API_PREFIX}/health",
@@ -86,6 +95,8 @@ def create_app() -> FastAPI:
                 "signup": f"{settings.API_PREFIX}/auth/signup",
                 "tutor": f"{settings.API_PREFIX}/tutor/ask",
                 "admin": f"{settings.API_PREFIX}/admin/dashboard/stats",
+                "progress": f"{settings.API_PREFIX}/progress/dashboard",
+                "chat_history": f"{settings.API_PREFIX}/chat-history/conversations",  # ✅ NEW
                 "docs": "/docs"
             }
         }

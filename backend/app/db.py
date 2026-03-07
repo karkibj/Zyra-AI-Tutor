@@ -1,8 +1,9 @@
 """
 Database Handshake File
 -----------------------
-Async SQLAlchemy setup with NEW models only
+Async SQLAlchemy setup with NEW models only + Progress Tracking
 """
+from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
@@ -17,6 +18,9 @@ import app.models.curriculum
 import app.models.extracted_item
 import app.models.exam_spec
 import app.models.processing_queue
+import app.models.progress  # ✅ Progress tracking models
+
+import app.models.chat  # ✅ Chat history models (ChatConversation + ChatMessage)
 
 # OLD models removed - they're renamed to .old files
 # import app.models.exam
@@ -60,6 +64,32 @@ async def get_db():
     """
     async with AsyncSessionLocal() as session:
         yield session
+
+
+# -----------------------------
+# CONTEXT MANAGER FOR AGENTS
+# -----------------------------
+@asynccontextmanager
+async def get_db_session():
+    """
+    Context manager for getting database session in async contexts
+    Used in agents/background tasks where Depends() can't be used
+    
+    Usage:
+        async with get_db_session() as db:
+            service = ProgressTrackingService(db)
+            await service.log_interaction(...)
+    """
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
 
 # -----------------------------
 # DATABASE INITIALIZATION
