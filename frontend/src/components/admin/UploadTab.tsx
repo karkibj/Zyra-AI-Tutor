@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Upload, X, CheckCircle, AlertCircle, FileText, Loader } from 'lucide-react';
 
 interface UploadTabProps {
@@ -20,24 +20,10 @@ const CONTENT_TYPES = [
   { value: 'teacher_note', label: 'Teacher Notes', description: 'Teaching materials' }
 ];
 
-const CHAPTERS: Chapter[] = [
-  { code: 'CDC-10-MATH-CH01', name: 'Sets', number: 1 },
-  { code: 'CDC-10-MATH-CH02', name: 'Compound Interest', number: 2 },
-  { code: 'CDC-10-MATH-CH03', name: 'Growth and Depreciation', number: 3 },
-  { code: 'CDC-10-MATH-CH04', name: 'Currency and Exchange Rate', number: 4 },
-  { code: 'CDC-10-MATH-CH05', name: 'Area and Volume', number: 5 },
-  { code: 'CDC-10-MATH-CH06', name: 'Sequence and Series', number: 6 },
-  { code: 'CDC-10-MATH-CH07', name: 'Quadratic Equation', number: 7 },
-  { code: 'CDC-10-MATH-CH08', name: 'Algebraic Fraction', number: 8 },
-  { code: 'CDC-10-MATH-CH09', name: 'Indices', number: 9 },
-  { code: 'CDC-10-MATH-CH10', name: 'Triangles and Quadrilaterals', number: 10 },
-  { code: 'CDC-10-MATH-CH11', name: 'Construction', number: 11 },
-  { code: 'CDC-10-MATH-CH12', name: 'Circle', number: 12 },
-  { code: 'CDC-10-MATH-CH13', name: 'Statistics', number: 13 },
-  { code: 'CDC-10-MATH-CH14', name: 'Probability', number: 14 }
-];
+// Chapters loaded from backend — no hardcoding
 
 export const UploadTab: React.FC<UploadTabProps> = ({ onUploadComplete }) => {
+  const [chapters, setChapters] = useState<Chapter[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -54,6 +40,31 @@ export const UploadTab: React.FC<UploadTabProps> = ({ onUploadComplete }) => {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Fetch chapters from DB on mount — no hardcoding
+  useEffect(() => {
+    const fetchChapters = async () => {
+      try {
+        const res = await fetch('http://localhost:8000/api/v1/admin/curriculum/tree?root_code=CDC');
+        const tree = await res.json();
+        // Navigate: CDC → Grade 10 → Mathematics → chapters
+        const extracted: Chapter[] = [];
+        const walk = (node: any) => {
+          if (node.code?.startsWith('CDC-10-MATH-CH') && node.node_type === 'chapter') {
+            const num = parseInt(node.code.replace('CDC-10-MATH-CH', ''), 10);
+            extracted.push({ code: node.code, name: node.name, number: num });
+          }
+          (node.children || []).forEach(walk);
+        };
+        walk(tree);
+        extracted.sort((a, b) => a.number - b.number);
+        setChapters(extracted);
+      } catch (e) {
+        console.error('Failed to load chapters from backend:', e);
+      }
+    };
+    fetchChapters();
+  }, []);
+
   // Auto-detect content type and suggest chapters
   const autoDetectFromFilename = (filename: string) => {
     const lower = filename.toLowerCase();
@@ -62,7 +73,7 @@ export const UploadTab: React.FC<UploadTabProps> = ({ onUploadComplete }) => {
     if (lower.includes('2081') || lower.includes('2080') || lower.includes('see')) {
       setContentType('past_paper');
       // Select all chapters for past papers
-      setSelectedChapters(CHAPTERS.map(ch => ch.code));
+      setSelectedChapters(chapters.map(ch => ch.code));
       
       // Auto-generate title
       if (lower.includes('bagmati')) {
@@ -75,12 +86,12 @@ export const UploadTab: React.FC<UploadTabProps> = ({ onUploadComplete }) => {
     // Detect model questions
     else if (lower.includes('model')) {
       setContentType('model_question');
-      setSelectedChapters(CHAPTERS.map(ch => ch.code));
+      setSelectedChapters(chapters.map(ch => ch.code));
     }
     
     // Detect chapter-specific content
     else {
-      CHAPTERS.forEach(chapter => {
+      chapters.forEach(chapter => {
         const chapterName = chapter.name.toLowerCase().replace(/\s+/g, '_');
         if (lower.includes(chapterName) || lower.includes(`ch${chapter.number}`)) {
           setSelectedChapters([chapter.code]);
@@ -157,7 +168,7 @@ export const UploadTab: React.FC<UploadTabProps> = ({ onUploadComplete }) => {
   };
 
   const selectAllChapters = () => {
-    setSelectedChapters(CHAPTERS.map(ch => ch.code));
+    setSelectedChapters(chapters.map(ch => ch.code));
   };
 
   const clearAllChapters = () => {
@@ -338,7 +349,7 @@ export const UploadTab: React.FC<UploadTabProps> = ({ onUploadComplete }) => {
                 </div>
               </div>
               <div className="chapters-grid">
-                {CHAPTERS.map((chapter) => (
+                {chapters.map((chapter) => (
                   <div
                     key={chapter.code}
                     className={`chapter-card ${selectedChapters.includes(chapter.code) ? 'selected' : ''}`}

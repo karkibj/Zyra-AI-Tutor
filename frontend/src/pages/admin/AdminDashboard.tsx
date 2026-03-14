@@ -15,7 +15,8 @@ import {
   Download,
   Eye,
   Settings,
-  Inbox
+  Inbox,
+  Users
 } from 'lucide-react';
 import '../../styles/AdminDashboard.css'
 import UploadTab from '../../components/admin/UploadTab';
@@ -23,6 +24,8 @@ import AnalyticsTab from '../../components/admin/AnalyticsTab';
 import LibraryTab from '../../components/admin/LibraryTab';
 import CurriculumTab from '../../components/admin/CurriculumTab';
 import PastPapersTab from '../../components/admin/PastPapersTab';
+import KnowledgeBaseTab from '../../components/admin/KnowledgeBaseTab';
+import StudentsTab from '../../components/admin/Studentstab';
 
 interface DashboardStats {
   total_content: number;
@@ -53,7 +56,8 @@ interface CoverageData {
 }
 
 const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'upload' | 'library' | 'curriculum' | 'analytics' | 'past-papers'>('overview');
+  const [showSettings, setShowSettings] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'upload' | 'library' | 'curriculum' | 'analytics' | 'past-papers' | 'knowledge-base' | 'students'>('overview');
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [coverage, setCoverage] = useState<CoverageData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -87,7 +91,9 @@ const AdminDashboard: React.FC = () => {
     { id: 'library', label: 'Content Library', icon: FileText },
     { id: 'past-papers', label: 'Past Papers', icon: FileQuestion }, 
     { id: 'curriculum', label: 'Curriculum', icon: FolderTree },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp }
+    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+    { id: 'knowledge-base', label: 'Knowledge Base', icon: BarChart3 },
+    { id: 'students', label: 'Students', icon: Users }
   ];
 
   return (
@@ -105,7 +111,7 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             <div className="admin-header-actions">
-              <button className="admin-settings-btn">
+              <button className="admin-settings-btn" onClick={() => setShowSettings(true)} title="System Settings">
                 <Settings />
               </button>
               <div className="admin-avatar">A</div>
@@ -138,7 +144,8 @@ const AdminDashboard: React.FC = () => {
             stats={stats} 
             coverage={coverage} 
             loading={loading} 
-            onRefresh={fetchDashboardData} 
+            onRefresh={fetchDashboardData}
+            onTabChange={setActiveTab}
           />
         )}
         {activeTab === 'upload' && <UploadTab onUploadComplete={fetchDashboardData} />}
@@ -146,7 +153,52 @@ const AdminDashboard: React.FC = () => {
         {activeTab === 'curriculum' && <CurriculumTab />}
         {activeTab === 'analytics' && <AnalyticsTab coverage={coverage} />}
         {activeTab === 'past-papers' && <PastPapersTab />}
-        
+        {activeTab === 'knowledge-base' && <KnowledgeBaseTab />}
+        {activeTab === 'students' && <StudentsTab />}
+      {/* Settings Dropdown */}
+      {showSettings && (
+        <>
+          {/* Backdrop */}
+          <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setShowSettings(false)} />
+          {/* Dropdown */}
+          <div style={{
+            position: 'fixed', top: '64px', right: '24px', zIndex: 9999,
+            background: '#fff', borderRadius: '12px', padding: '8px',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.15)', border: '1px solid #e5e7eb',
+            minWidth: '200px'
+          }}>
+            <button
+              onClick={() => { window.open('/home', '_blank'); setShowSettings(false); }}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '10px 14px', border: 'none', borderRadius: '8px',
+                background: 'none', cursor: 'pointer', fontSize: '14px', color: '#374151',
+                textAlign: 'left'
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+            >
+              <span style={{ fontSize: '16px' }}>👁️</span>
+              View Student Mode
+            </button>
+            <div style={{ height: '1px', background: '#f3f4f6', margin: '4px 0' }} />
+            <button
+              onClick={() => { localStorage.removeItem('token'); window.location.href = '/login'; }}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '10px 14px', border: 'none', borderRadius: '8px',
+                background: 'none', cursor: 'pointer', fontSize: '14px', color: '#ef4444',
+                textAlign: 'left'
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#fee2e2')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+            >
+              <span style={{ fontSize: '16px' }}>🚪</span>
+              Logout
+            </button>
+          </div>
+        </>
+      )}
       </main>
     </div>
   );
@@ -161,7 +213,8 @@ const OverviewTab: React.FC<{
   coverage: CoverageData | null;
   loading: boolean;
   onRefresh: () => void;
-}> = ({ stats, coverage, loading, onRefresh }) => {
+  onTabChange: (tab: any) => void;
+}> = ({ stats, coverage, loading, onRefresh, onTabChange }) => {
   if (loading) {
     return (
       <div className="loading-container">
@@ -189,7 +242,7 @@ const OverviewTab: React.FC<{
           value={stats?.total_content || 0}
           icon={FileText}
           color="indigo"
-          trend="+12% from last week"
+          trend="Total documents"
         />
         <StatCard
           title="Processing"
@@ -288,10 +341,10 @@ const OverviewTab: React.FC<{
         <div className="quick-actions-section">
           <h2>Quick Actions</h2>
           <div className="quick-actions-grid">
-            <QuickActionButton icon={Upload} label="Upload Content" />
-            <QuickActionButton icon={FileText} label="View Library" />
-            <QuickActionButton icon={BarChart3} label="Analytics" />
-            <QuickActionButton icon={Download} label="Export Data" />
+            <QuickActionButton icon={Upload} label="Upload Content" onClick={() => onTabChange('upload')} />
+            <QuickActionButton icon={FileText} label="View Library" onClick={() => onTabChange('library')} />
+            <QuickActionButton icon={BarChart3} label="Knowledge Base" onClick={() => onTabChange('knowledge-base')} />
+            <QuickActionButton icon={TrendingUp} label="Analytics" onClick={() => onTabChange('analytics')} />
           </div>
         </div>
       </div>
@@ -331,9 +384,10 @@ const StatCard: React.FC<{
 const QuickActionButton: React.FC<{
   icon: any;
   label: string;
-}> = ({ icon: Icon, label }) => {
+  onClick?: () => void;
+}> = ({ icon: Icon, label, onClick }) => {
   return (
-    <button className="quick-action-btn">
+    <button className="quick-action-btn" onClick={onClick}>
       <Icon />
       <span>{label}</span>
     </button>
