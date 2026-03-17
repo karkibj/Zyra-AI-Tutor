@@ -1,69 +1,69 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { 
-  FileText, 
-  Download, 
-  Eye, 
-  Calendar, 
-  MapPin, 
-  Search,
-  Filter,
-  X,
-  BookOpen,
-  Award
+import {
+  FileText, Download, Eye, Calendar, MapPin, Search,
+  Filter, X, BookOpen, Award, ChevronDown, AlertCircle
 } from 'lucide-react';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
 import '../styles/StudentPastPapersPage.css';
 
-// ✅ Lazy load PDFViewer — isolates any pdfjs crash from the main page
 const PDFViewer = lazy(() => import('../components/PDFViewer'));
 
-
+// ── Types ─────────────────────────────────────────────────────────────────────
 interface PastPaper {
-  id: string;
-  title: string;
-  year: number;
-  province: string;
-  full_marks: number;
-  page_count: number;
-  file_size: number;
-  download_url: string;
-  created_at: string;
+  id: string; title: string; year: number; province: string;
+  full_marks: number; page_count: number; file_size: number;
+  download_url: string; created_at: string;
 }
+interface Filters { years: number[]; provinces: string[]; }
 
-interface Filters {
-  years: number[];
-  provinces: string[];
-}
+// Color palette — one per province slot, assigned by index when filters load.
+// No province names hardcoded — all data comes from the backend.
+const PROVINCE_COLORS = [
+  '#ef4444', '#fb923c', '#fbbf24', '#34d399',
+  '#60a5fa', '#a78bfa', '#f472b6',
+];
+
+const makeProvinceCfg = (color: string) => ({
+  color,
+  bg:     `${color}1a`,
+  border: `${color}47`,
+});
+
+const FALLBACK_COLOR = { color: '#94a3b8', bg: 'rgba(148,163,184,.10)', border: 'rgba(148,163,184,.25)' };
+
+const API  = 'http://localhost:8000/api/v1';
+const HOST = 'http://localhost:8000';
 
 const StudentPastPapersPage: React.FC = () => {
-  const [papers, setPapers] = useState<PastPaper[]>([]);
-  const [filters, setFilters] = useState<Filters>({ years: [], provinces: [] });
-  const [loading, setLoading] = useState(true);
-  
-  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [papers, setPapers]                     = useState<PastPaper[]>([]);
+  const [filters, setFilters]                   = useState<Filters>({ years: [], provinces: [] });
+  const [loading, setLoading]                   = useState(true);
+  const [selectedYear, setSelectedYear]         = useState<number | null>(null);
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  const [viewingPaper, setViewingPaper] = useState<PastPaper | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery]           = useState('');
+  const [viewingPaper, setViewingPaper]         = useState<PastPaper | null>(null);
+  const [showFilters, setShowFilters]           = useState(false);
+  const [downloadError, setDownloadError]       = useState<string | null>(null);
+  // Province → color map, built when filters load — no hardcoding
+  const [provinceColors, setProvinceColors]       = useState<Record<string, ReturnType<typeof makeProvinceCfg>>>({});
 
-  useEffect(() => {
-    loadFilters();
-    loadPapers();
-  }, [selectedYear, selectedProvince]);
+  useEffect(() => { loadFilters(); loadPapers(); }, [selectedYear, selectedProvince]);
 
   const loadFilters = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/v1/admin/past-papers/filters');
-      // ✅ FIX: guard against API returning unexpected shape
-      setFilters({
-        years:     Array.isArray(response.data?.years)     ? response.data.years     : [],
-        provinces: Array.isArray(response.data?.provinces) ? response.data.provinces : [],
+      const r         = await axios.get(`${API}/admin/past-papers/filters`);
+      const years     = Array.isArray(r.data?.years)     ? r.data.years     : [];
+      const provinces = Array.isArray(r.data?.provinces) ? r.data.provinces : [];
+      setFilters({ years, provinces });
+
+      // Assign one color per province by arrival order — no name mapping
+      const colorMap: Record<string, ReturnType<typeof makeProvinceCfg>> = {};
+      provinces.forEach((p: string, idx: number) => {
+        colorMap[p] = makeProvinceCfg(PROVINCE_COLORS[idx % PROVINCE_COLORS.length]);
       });
-    } catch (error) {
-      console.error('Error loading filters:', error);
-      // ✅ FIX: keep safe defaults on error — don't leave state undefined
+      setProvinceColors(colorMap);
+    } catch {
       setFilters({ years: [], provinces: [] });
     }
   };
@@ -71,270 +71,251 @@ const StudentPastPapersPage: React.FC = () => {
   const loadPapers = async () => {
     setLoading(true);
     try {
-      let url = 'http://localhost:8000/api/v1/admin/past-papers/list';
       const params = new URLSearchParams();
-      if (selectedYear) params.append('year', selectedYear.toString());
+      if (selectedYear)     params.append('year',     selectedYear.toString());
       if (selectedProvince) params.append('province', selectedProvince);
-      if (params.toString()) url += `?${params.toString()}`;
-      const response = await axios.get(url);
-      setPapers(response.data.papers || []);
-    } catch (error) {
-      console.error('Error loading papers:', error);
+      const url = `${API}/admin/past-papers/list${params.toString() ? `?${params}` : ''}`;
+      const r   = await axios.get(url);
+      setPapers(r.data.papers || []);
+    } catch {
+      setPapers([]);
     } finally {
       setLoading(false);
     }
   };
 
- const handleDownload = async (paper: PastPaper) => {
-  try {
-    // ✅ FIXED: Proper blob download with correct headers
-    const response = await axios.get(
-      `http://localhost:8000${paper.download_url}`,
-      {
+  const handleDownload = async (paper: PastPaper) => {
+    setDownloadError(null);
+    try {
+      const r    = await axios.get(`${HOST}${paper.download_url}`, {
         responseType: 'blob',
-        headers: {
-          'Accept': 'application/pdf'
-        }
-      }
-    );
-    
-    // Create blob URL
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-    
-    // Create download link
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${paper.title}.pdf`;
-    
-    // Trigger download
-    document.body.appendChild(link);
-    link.click();
-    
-    // Cleanup
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-    
-    console.log('✅ Download successful');
-  } catch (error) {
-    console.error('❌ Download error:', error);
-    alert('Failed to download. Please try again.');
-  }
-};
-
-  const clearFilters = () => {
-    setSelectedYear(null);
-    setSelectedProvince(null);
-    setSearchQuery('');
+        headers: { Accept: 'application/pdf' },
+      });
+      const url  = window.URL.createObjectURL(new Blob([r.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href  = url;
+      link.download = `${paper.title}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setDownloadError('Download failed. Please try again.');
+      setTimeout(() => setDownloadError(null), 4000);
+    }
   };
 
-  const filteredPapers = papers.filter(paper => {
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        paper.title.toLowerCase().includes(query) ||
-        paper.province.toLowerCase().includes(query) ||
-        paper.year.toString().includes(query)
-      );
-    }
-    return true;
+  const clearFilters = () => { setSelectedYear(null); setSelectedProvince(null); setSearchQuery(''); };
+
+  const filteredPapers = papers.filter(p => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return p.title.toLowerCase().includes(q) || p.province.toLowerCase().includes(q) || p.year.toString().includes(q);
   });
 
-  // ✅ FIX: skip papers with missing year to prevent NaN key crash
-  const papersByYear = filteredPapers.reduce((acc, paper) => {
-    if (!paper.year) return acc;
-    if (!acc[paper.year]) acc[paper.year] = [];
-    acc[paper.year].push(paper);
+  const papersByYear = filteredPapers.reduce((acc, p) => {
+    if (!p.year) return acc;
+    if (!acc[p.year]) acc[p.year] = [];
+    acc[p.year].push(p);
     return acc;
   }, {} as Record<number, PastPaper[]>);
 
-  const formatFileSize = (bytes: number) => (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-
-  const activeFiltersCount = (selectedYear ? 1 : 0) + (selectedProvince ? 1 : 0);
+  const fmt        = (b: number) => (b / (1024 * 1024)).toFixed(2) + ' MB';
+  const activeCount = (selectedYear ? 1 : 0) + (selectedProvince ? 1 : 0);
 
   return (
-    // ✅ Outer wrapper mirrors ChatPage: flex row, full height
     <div className="past-papers-page-container">
-      <Sidebar />                                     {/* ✅ ADDED — same as ChatPage */}
-
+      <Sidebar />
       <main className="past-papers-main">
 
-        {/* Hero Header */}
-        <div className="hero-header">
-          <div className="hero-content">
-            <div className="hero-icon">
-              <Award size={48} />
-            </div>
-            <div className="hero-text">
-              <h1>📚 SEE Past Papers</h1>
-              <p>Practice with real exam papers from all provinces</p>
+        {/* ── Hero ── */}
+        <div className="pp-hero">
+          <div className="pp-hero-left">
+            <div className="pp-hero-icon"><FileText size={24} /></div>
+            <div>
+              <h1 className="pp-hero-title">SEE Past Papers</h1>
+              <p className="pp-hero-subtitle">Real exam papers from all 7 provinces · Practice anytime</p>
             </div>
           </div>
-          <div className="hero-stats">
-            <div className="stat-badge">
-              <FileText size={20} />
-              <span>{papers.length} Papers</span>
+          <div className="pp-stats-row">
+            <div className="pp-stat-pill">
+              <FileText size={14} />
+              <strong>{papers.length}</strong>
+              <span>Papers</span>
             </div>
-            <div className="stat-badge">
-              <Calendar size={20} />
-              <span>{filters.years.length} Years</span>
+            <div className="pp-stat-divider" />
+            <div className="pp-stat-pill">
+              <Calendar size={14} />
+              <strong>{filters.years.length}</strong>
+              <span>Years</span>
             </div>
-            <div className="stat-badge">
-              <MapPin size={20} />
-              <span>{filters.provinces.length} Provinces</span>
+            <div className="pp-stat-divider" />
+            <div className="pp-stat-pill">
+              <MapPin size={14} />
+              <strong>{filters.provinces.length || 7}</strong>
+              <span>Provinces</span>
             </div>
           </div>
         </div>
 
-        {/* Search & Filters Bar */}
-        <div className="controls-bar">
-          <div className="search-box">
-            <Search size={20} />
-            <input
-              type="text"
-              placeholder="Search by year, province, or title..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            {searchQuery && (
-              <button className="clear-search" onClick={() => setSearchQuery('')}>
-                <X size={16} />
-              </button>
-            )}
-          </div>
-          <button
-            className={`filters-btn ${showFilters ? 'active' : ''}`}
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Filter size={20} />
-            Filters
-            {activeFiltersCount > 0 && (
-              <span className="filter-count">{activeFiltersCount}</span>
-            )}
-          </button>
-        </div>
-
-        {/* Filters Panel */}
-        {showFilters && (
-          <div className="filters-panel">
-            <div className="filter-group">
-              <label>Year</label>
-              <select
-                value={selectedYear || ''}
-                onChange={(e) => setSelectedYear(e.target.value ? Number(e.target.value) : null)}
-              >
-                <option value="">All Years</option>
-                {filters.years.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-            </div>
-            <div className="filter-group">
-              <label>Province</label>
-              <select
-                value={selectedProvince || ''}
-                onChange={(e) => setSelectedProvince(e.target.value || null)}
-              >
-                <option value="">All Provinces</option>
-                {filters.provinces.map(province => (
-                  <option key={province} value={province}>{province}</option>
-                ))}
-              </select>
-            </div>
-            {activeFiltersCount > 0 && (
-              <button className="clear-filters-btn" onClick={clearFilters}>
-                <X size={16} />
-                Clear Filters
-              </button>
-            )}
+        {/* ── Download error toast ── */}
+        {downloadError && (
+          <div className="pp-error-toast">
+            <AlertCircle size={15} />
+            {downloadError}
           </div>
         )}
 
-        {/* Papers Content */}
-        <div className="papers-content">
-          {loading ? (
-            <div className="loading-state">
-              <div className="loading-spinner" />
-              <p>Loading past papers...</p>
-            </div>
-          ) : filteredPapers.length === 0 ? (
-            <div className="empty-state">
-              <BookOpen size={64} />
-              <h3>No papers found</h3>
-              <p>Try adjusting your filters or search query</p>
-              {activeFiltersCount > 0 && (
-                <button className="btn-primary" onClick={clearFilters}>
-                  Clear Filters
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="papers-list">
-              {Object.keys(papersByYear)
-                .sort((a, b) => Number(b) - Number(a))
-                .map(year => (
-                  <div key={year} className="year-section">
-                    <div className="year-header">
-                      <Calendar size={24} />
-                      <h2>SEE {year}</h2>
-                      <span className="year-count">
-                        {(papersByYear[Number(year)] || []).length} paper{(papersByYear[Number(year)] || []).length !== 1 ? 's' : ''}
-                      </span>
-                    </div>
-                    <div className="papers-grid">
-                      {(papersByYear[Number(year)] || []).map(paper => (
-                        <div key={paper.id} className="paper-card">
-                          <div className="paper-card-header">
-                            <div className="paper-icon">
-                              <FileText size={32} />
-                            </div>
-                            <div className="paper-badge">{paper.full_marks} marks</div>
-                          </div>
-                          <div className="paper-card-body">
-                            <h3>{paper.province} Province</h3>
-                            <div className="paper-meta">
-                              <div className="meta-item">
-                                <MapPin size={14} />
-                                <span>{paper.province}</span>
-                              </div>
-                              <div className="meta-item">
-                                <FileText size={14} />
-                                <span>{paper.page_count || '?'} pages</span>
-                              </div>
-                              <div className="meta-item">
-                                <Download size={14} />
-                                <span>{formatFileSize(paper.file_size)}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="paper-card-actions">
-                            <button
-                              className="btn-action view-btn"
-                              onClick={() => setViewingPaper(paper)}
-                            >
-                              <Eye size={18} />
-                              View Paper
-                            </button>
-                            <button
-                              className="btn-action download-btn"
-                              onClick={() => handleDownload(paper)}
-                            >
-                              <Download size={18} />
-                              Download
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-            </div>
+        {/* ── Search + filter bar ── */}
+        <div className="pp-controls">
+          <div className="pp-search-wrapper">
+            <Search size={16} className="pp-search-icon" />
+            <input
+              className="pp-search-input"
+              type="text"
+              placeholder="Search by year, province…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button className="pp-search-clear" onClick={() => setSearchQuery('')}>
+                <X size={15} />
+              </button>
+            )}
+          </div>
+
+          <button
+            className={`pp-filter-btn ${showFilters ? 'active' : ''}`}
+            onClick={() => setShowFilters(v => !v)}
+          >
+            <Filter size={15} />
+            Filters
+            {activeCount > 0 && <span className="pp-filter-badge">{activeCount}</span>}
+            <ChevronDown size={14} className={showFilters ? 'rotate' : ''} />
+          </button>
+
+          {activeCount > 0 && (
+            <button className="pp-clear-all" onClick={clearFilters}>
+              <X size={13} /> Clear
+            </button>
           )}
         </div>
 
+        {/* ── Filter panel ── */}
+        {showFilters && (
+          <div className="pp-filters-panel">
+            <div className="pp-filter-group">
+              <label className="pp-filter-label">Year</label>
+              <select
+                className="pp-filter-select"
+                value={selectedYear || ''}
+                onChange={e => setSelectedYear(e.target.value ? Number(e.target.value) : null)}
+              >
+                <option value="">All Years</option>
+                {filters.years.map(y => <option key={y} value={y}>SEE {y}</option>)}
+              </select>
+            </div>
+            <div className="pp-filter-group">
+              <label className="pp-filter-label">Province</label>
+              <select
+                className="pp-filter-select"
+                value={selectedProvince || ''}
+                onChange={e => setSelectedProvince(e.target.value || null)}
+              >
+                <option value="">All Provinces</option>
+                {filters.provinces.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* ── Papers ── */}
+        <div className="pp-content">
+          {loading ? (
+            <div className="pp-loading">
+              <div className="pp-spinner" />
+              <p>Loading past papers…</p>
+            </div>
+          ) : filteredPapers.length === 0 ? (
+            <div className="pp-empty">
+              <BookOpen size={48} className="pp-empty-icon" />
+              <h3 className="pp-empty-title">No papers found</h3>
+              <p className="pp-empty-text">Try adjusting your search or filters</p>
+              {activeCount > 0 && (
+                <button className="pp-empty-btn" onClick={clearFilters}>Clear Filters</button>
+              )}
+            </div>
+          ) : (
+            Object.keys(papersByYear)
+              .sort((a, b) => Number(b) - Number(a))
+              .map(year => (
+                <div key={year} className="pp-year-section">
+                  <div className="pp-year-header">
+                    <div className="pp-year-title">
+                      <Calendar size={18} />
+                      <h2>SEE {year}</h2>
+                    </div>
+                    <span className="pp-year-count">
+                      {papersByYear[Number(year)].length} paper{papersByYear[Number(year)].length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+
+                  <div className="pp-papers-grid">
+                    {papersByYear[Number(year)].map(paper => {
+                      const cfg = provinceColors[paper.province] ?? FALLBACK_COLOR;
+                      return (
+                        <div
+                          key={paper.id}
+                          className="pp-paper-card"
+                          style={{
+                            '--province-color':  cfg.color,
+                            '--province-bg':     cfg.bg,
+                            '--province-border': cfg.border,
+                          } as React.CSSProperties}
+                        >
+                          <div className="pp-card-body">
+                            {/* Province badge */}
+                            <div
+                              className="pp-province-badge"
+                              style={{ background: cfg.bg, borderColor: cfg.border, color: cfg.color }}
+                            >
+                              <MapPin size={12} />
+                              {paper.province}
+                            </div>
+
+                            <h3 className="pp-card-title">{paper.province} Province</h3>
+
+                            <div className="pp-card-meta">
+                              <span className="pp-meta-item">
+                                <Award size={13} />{paper.full_marks} marks
+                              </span>
+                              <span className="pp-meta-item">
+                                <FileText size={13} />{paper.page_count || '?'} pages
+                              </span>
+                              <span className="pp-meta-item">
+                                <Download size={13} />{fmt(paper.file_size)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="pp-card-actions">
+                            <button className="pp-view-btn" onClick={() => setViewingPaper(paper)}>
+                              <Eye size={15} /> View
+                            </button>
+                            <button className="pp-download-btn" onClick={() => handleDownload(paper)}>
+                              <Download size={15} /> Download
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))
+          )}
+        </div>
       </main>
 
-      {/* PDF Viewer Modal — wrapped in Suspense for lazy loading */}
       {viewingPaper && (
         <Suspense fallback={null}>
           <PDFViewer
