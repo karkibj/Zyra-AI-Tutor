@@ -1,0 +1,1615 @@
+/* ============================================================================
+   PROGRESS DASHBOARD - POLISHED WITH ANIMATIONS
+   ============================================================================ */
+
+/* ============================================================================
+   PROGRESS DASHBOARD — PATCH
+   Fixes: hero font consistency, emoji -> icon styles, student-friendly polish
+   Apply these overrides at the BOTTOM of ProgressDashboard.css
+   ============================================================================ */
+
+/* Status icons replacing emojis */
+.status-icon { flex-shrink: 0; }
+.status-icon.mastered { color: #10b981; }
+.status-icon.progress { color: #60a5fa; }
+.status-icon.weak     { color: #f87171; }
+.status-icon.default  { color: #94a3b8; }
+
+/* Empty state card icons — now Lucide, not emoji */
+.pd-empty-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: rgba(96, 165, 250, 0.12);
+  color: #60a5fa;
+  margin: 0 auto 16px;
+}
+
+.pd-empty-card.primary .pd-empty-card-icon {
+  background: rgba(37, 99, 235, 0.18);
+  color: #93c5fd;
+}
+
+/* ============================================================================
+   HERO — consistent typography matching the rest of the UI
+   ============================================================================ */
+
+/* Remove the giant gradient display font — match page body weight */
+.pd-hero-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #60a5fa;
+  margin-bottom: 16px;
+}
+
+.pd-readiness-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* The percentage — consolidated single source of truth below (see end of file) */
+
+/* Friendly label badge next to the percentage */
+.pd-readiness-badge {
+  padding: 5px 12px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.pd-readiness-badge.ready   { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+.pd-readiness-badge.halfway { background: rgba(96, 165, 250, 0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); }
+.pd-readiness-badge.early   { background: rgba(251,191,36,0.15);    color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+
+/* Gap text — softer, with icon */
+.pd-gap {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: #fbbf24;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Prediction items — icon replaces emoji */
+.pd-pred-icon {
+  color: #60a5fa;
+  flex-shrink: 0;
+}
+
+/* ============================================================================
+   ENCOURAGEMENT — with inline icon
+   ============================================================================ */
+.pd-encouragement {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #94a3b8;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+.pd-encouragement svg { color: #fbbf24; flex-shrink: 0; }
+
+/* ============================================================================
+   STREAK INFO — icons inline
+   ============================================================================ */
+.pd-streak-info span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pd-streak-info svg { opacity: 0.7; }
+
+/* ============================================================================
+   STUDENT-FRIENDLY: Softer section headers, warmer feel
+   ============================================================================ */
+.pd-section-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+/* Recommendation card — warmer border tone */
+.pd-rec-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  padding: 20px;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.pd-rec-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(96, 165, 250, 0.3);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* Mastered item — pill style */
+.pd-mastered-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pd-mastered-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: 99px;
+}
+
+/* Chapter card — icon aligned header */
+.pd-chapter-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.pd-chapter-header .status-icon {
+  margin-top: 2px;
+}
+
+.pd-container {
+  display: flex;
+  height: 100vh;
+  background: #080e1f;
+  color: #f1f5f9;
+  overflow: hidden;
+}
+
+.pd-main {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.pd-main::-webkit-scrollbar { width: 4px; }
+.pd-main::-webkit-scrollbar-track { background: transparent; }
+.pd-main::-webkit-scrollbar-thumb { 
+  background: rgba(96, 165, 250, 0.3);
+  border-radius: 4px;
+}
+
+/* ============================================================================
+   ANIMATIONS
+   ============================================================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.slide-in {
+  animation: slideIn 0.4s ease-out;
+}
+
+.slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
+.pop-in {
+  animation: popIn 0.3s ease-out;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+/* ============================================================================
+   HEADER
+   ============================================================================ */
+
+.pd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32px 40px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pd-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 32px;
+  font-weight: 800;
+  margin: 0 0 8px 0;
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.pd-title-icon {
+  width: 36px;
+  height: 36px;
+  color: #60a5fa;
+}
+
+.pd-subtitle {
+  font-size: 16px;
+  color: rgba(241, 245, 249, 0.6);
+  margin: 0;
+}
+
+.pd-refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  border-radius: 10px;
+  color: #60a5fa;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pd-refresh-btn:hover:not(:disabled) {
+  background: rgba(96, 165, 250, 0.15);
+  transform: translateY(-1px);
+}
+
+.pd-refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+   LOADING & ERROR STATES
+   ============================================================================ */
+
+.pd-loading,
+.pd-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 16px;
+}
+
+.pd-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(96, 165, 250, 0.2);
+  border-top-color: #60a5fa;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.pd-loading p,
+.pd-error p {
+  font-size: 16px;
+  color: rgba(241, 245, 249, 0.6);
+}
+
+.pd-error-icon {
+  color: #f87171;
+}
+
+.pd-error h2 {
+  font-size: 24px;
+  color: #f1f5f9;
+  margin: 8px 0;
+}
+
+.pd-retry-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+  transition: all 0.2s;
+}
+
+.pd-retry-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* ============================================================================
+   EMPTY STATE
+   ============================================================================ */
+
+.pd-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 120px);
+  padding: 40px;
+}
+
+.pd-empty-content {
+  max-width: 900px;
+  text-align: center;
+}
+
+.pd-empty-icon {
+  color: #60a5fa;
+  margin-bottom: 24px;
+  animation: popIn 0.6s ease-out;
+}
+
+.pd-empty-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #f1f5f9;
+  margin: 0 0 12px 0;
+}
+
+.pd-empty-text {
+  font-size: 18px;
+  color: rgba(241, 245, 249, 0.6);
+  margin: 0 0 40px 0;
+}
+
+.pd-empty-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.pd-empty-card {
+  padding: 32px 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  transition: all 0.3s;
+  animation: slideUp 0.5s ease-out;
+}
+
+.pd-empty-card:nth-child(1) { animation-delay: 0.1s; }
+.pd-empty-card:nth-child(2) { animation-delay: 0.2s; }
+.pd-empty-card:nth-child(3) { animation-delay: 0.3s; }
+
+.pd-empty-card.primary {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(96, 165, 250, 0.08) 100%);
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+.pd-empty-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(96, 165, 250, 0.3);
+  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.2);
+}
+
+.pd-empty-card-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.pd-empty-card h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0 0 8px 0;
+}
+
+.pd-empty-card p {
+  font-size: 14px;
+  color: rgba(241, 245, 249, 0.6);
+  margin: 0 0 20px 0;
+}
+
+.pd-empty-card-btn {
+  width: 100%;
+  padding: 12px;
+  background: rgba(96, 165, 250, 0.15);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+  color: #60a5fa;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pd-empty-card-btn:hover {
+  background: rgba(96, 165, 250, 0.25);
+  transform: translateY(-2px);
+}
+
+.pd-empty-tip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 24px;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: 12px;
+  color: #fbbf24;
+  font-size: 14px;
+  font-weight: 500;
+  animation: fadeIn 0.8s ease-out 0.6s backwards;
+}
+
+/* ============================================================================
+   TABS
+   ============================================================================ */
+
+.pd-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 40px;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  overflow-x: auto;
+}
+
+.pd-tabs::-webkit-scrollbar { height: 0; }
+
+.pd-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: rgba(241, 245, 249, 0.6);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.pd-tab:hover {
+  color: #93c5fd;
+}
+
+.pd-tab.active {
+  color: #60a5fa;
+  border-bottom-color: #60a5fa;
+}
+
+/* ============================================================================
+   CONTENT AREA
+   ============================================================================ */
+
+.pd-content {
+  padding: 32px 40px;
+}
+
+.pd-tab-content {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.pd-section {
+  margin-bottom: 32px;
+}
+
+.pd-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.pd-section-icon {
+  width: 22px;
+  height: 22px;
+  color: #60a5fa;
+}
+
+.pd-section-icon.success {
+  color: #10b981;
+}
+
+.pd-section-header h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  color: #f1f5f9;
+}
+
+/* Import rest of styles from original CSS */
+  gap: 8px;
+  padding: 14px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: rgba(241, 245, 249, 0.6);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.pd-tab:hover {
+  color: #93c5fd;
+}
+
+.pd-tab.active {
+  color: #60a5fa;
+  border-bottom-color: #60a5fa;
+}
+
+/* ============================================================================
+   CONTENT AREA
+   ============================================================================ */
+
+.pd-content {
+  padding: 32px 40px;
+}
+
+.pd-tab-content {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.pd-section {
+  margin-bottom: 32px;
+}
+
+.pd-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.pd-section-icon {
+  width: 22px;
+  height: 22px;
+  color: #60a5fa;
+}
+
+.pd-section-icon.success {
+  color: #10b981;
+}
+
+.pd-section-header h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  color: #f1f5f9;
+}
+
+/* ============================================================================
+   HERO SECTION (SEE Readiness)
+   ============================================================================ */
+
+.pd-hero {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(96, 165, 250, 0.08) 100%);
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 32px;
+}
+
+.pd-hero-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #60a5fa;
+  margin: 0 0 24px 0;
+}
+
+.pd-readiness-display {
+  margin-bottom: 20px;
+}
+
+/* pd-readiness-percentage consolidated below */
+
+.pd-readiness-bar {
+  height: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.pd-readiness-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 50%, #10b981 100%);
+  border-radius: 6px;
+  transition: width 0.6s ease;
+}
+
+.pd-readiness-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: rgba(241, 245, 249, 0.7);
+}
+
+.pd-gap {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+.pd-predictions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.pd-prediction-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.pd-pred-icon {
+  font-size: 20px;
+}
+
+.pd-pred-text {
+  color: #f1f5f9;
+  font-weight: 500;
+}
+
+/* Quick Stats */
+.pd-quick-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.pd-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+}
+
+.pd-stat-card.success {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.pd-stat-card.success svg {
+  color: #10b981;
+}
+
+.pd-stat-card.streak {
+  background: rgba(251, 146, 60, 0.1);
+  border-color: rgba(251, 146, 60, 0.25);
+}
+
+.pd-stat-card.streak svg {
+  color: #fb923c;
+}
+
+.pd-stat-card svg {
+  flex-shrink: 0;
+  color: #60a5fa;
+}
+
+.pd-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1;
+}
+
+.pd-stat-label {
+  font-size: 12px;
+  color: rgba(241, 245, 249, 0.6);
+  margin-top: 4px;
+}
+
+/* ============================================================================
+   RECOMMENDATIONS
+   ============================================================================ */
+
+.pd-recommendations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.pd-rec-card {
+  padding: 24px;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 14px;
+  transition: all 0.2s;
+}
+
+.pd-rec-card:hover {
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.35);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(251, 191, 36, 0.15);
+}
+
+.pd-rec-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.pd-rec-emoji {
+  font-size: 28px;
+}
+
+.pd-rec-topic {
+  font-size: 17px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.pd-rec-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.pd-rec-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pd-rec-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f87171 0%, #fbbf24 50%, #34d399 100%);
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.pd-rec-percent {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.pd-rec-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.pd-rec-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pd-rec-stat-label {
+  font-size: 11px;
+  color: rgba(241, 245, 249, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pd-rec-stat-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.pd-rec-reason {
+  font-size: 13px;
+  color: rgba(241, 245, 249, 0.7);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.pd-rec-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pd-rec-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* ============================================================================
+   MASTERED TOPICS
+   ============================================================================ */
+
+.pd-mastered-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.pd-mastered-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 10px;
+}
+
+.pd-check {
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+.pd-mastered-name {
+  flex: 1;
+  font-weight: 500;
+  color: #f1f5f9;
+}
+
+.pd-mastered-percent {
+  font-weight: 700;
+  color: #10b981;
+}
+
+.pd-encouragement {
+  text-align: center;
+  padding: 16px;
+  background: rgba(96, 165, 250, 0.08);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  border-radius: 10px;
+  color: #93c5fd;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* ============================================================================
+   CHAPTERS
+   ============================================================================ */
+
+.pd-unit-group {
+  margin-bottom: 32px;
+}
+
+.pd-unit-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #60a5fa;
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(96, 165, 250, 0.25);
+}
+
+.pd-chapter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.pd-chapter-card {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.pd-chapter-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(96, 165, 250, 0.25);
+  transform: translateY(-2px);
+}
+
+.pd-chapter-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.pd-chapter-emoji {
+  font-size: 24px;
+}
+
+.pd-chapter-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.pd-chapter-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pd-chapter-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.pd-chapter-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.pd-chapter-percent {
+  font-size: 13px;
+  font-weight: 700;
+  color: #60a5fa;
+}
+
+.pd-chapter-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: rgba(241, 245, 249, 0.6);
+  margin-bottom: 14px;
+}
+
+.pd-chapter-practice {
+  width: 100%;
+  padding: 10px;
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  border-radius: 8px;
+  color: #60a5fa;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pd-chapter-practice:hover {
+  background: rgba(96, 165, 250, 0.15);
+}
+
+/* ============================================================================
+   TESTING AREAS
+   ============================================================================ */
+
+.pd-area-card {
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  margin-bottom: 16px;
+}
+
+.pd-area-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.pd-area-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.pd-area-marks {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fbbf24;
+  padding: 6px 12px;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: 20px;
+}
+
+.pd-area-progress {
+  margin-bottom: 16px;
+}
+
+.pd-area-bar {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.pd-area-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+  border-radius: 5px;
+  transition: width 0.4s;
+}
+
+.pd-area-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: rgba(241, 245, 249, 0.7);
+}
+
+.pd-area-chapters {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.pd-area-label {
+  font-size: 13px;
+  color: rgba(241, 245, 249, 0.5);
+  font-weight: 600;
+}
+
+.pd-area-chapter-list {
+  font-size: 13px;
+  color: #f1f5f9;
+}
+
+.pd-area-metrics {
+  display: flex;
+  gap: 24px;
+}
+
+.pd-area-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pd-area-metric span:first-child {
+  font-size: 20px;
+  font-weight: 700;
+  color: #60a5fa;
+}
+
+.pd-metric-label {
+  font-size: 11px;
+  color: rgba(241, 245, 249, 0.5);
+  text-transform: uppercase;
+}
+
+/* ============================================================================
+   ACTIVITY / STREAK
+   ============================================================================ */
+
+.pd-streak-card {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 32px;
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.15) 0%, rgba(251, 191, 36, 0.08) 100%);
+  border: 1px solid rgba(251, 146, 60, 0.3);
+  border-radius: 16px;
+}
+
+.pd-streak-icon {
+  width: 64px;
+  height: 64px;
+  color: #fb923c;
+}
+
+.pd-streak-content {
+  flex: 1;
+}
+
+.pd-streak-current {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.pd-streak-number {
+  font-size: 48px;
+  font-weight: 800;
+  color: #fb923c;
+  line-height: 1;
+}
+
+.pd-streak-label {
+  font-size: 20px;
+  font-weight: 600;
+  color: #fbbf24;
+}
+
+.pd-streak-info {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+  color: rgba(241, 245, 249, 0.6);
+}
+
+/* Chart Container */
+.pd-chart-container {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.pd-chart-container.large {
+  padding: 24px;
+}
+
+.pd-activity-summary {
+  display: flex;
+  justify-content: space-around;
+  padding: 20px;
+  background: rgba(96, 165, 250, 0.05);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  border-radius: 12px;
+  margin-top: 16px;
+}
+
+.pd-summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.pd-summary-label {
+  font-size: 12px;
+  color: rgba(241, 245, 249, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pd-summary-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #60a5fa;
+}
+
+/* ============================================================================
+   LOADING STATE
+   ============================================================================ */
+
+.pd-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 16px;
+}
+
+.pd-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(96, 165, 250, 0.2);
+  border-top-color: #60a5fa;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.pd-loading p {
+  font-size: 16px;
+  color: rgba(241, 245, 249, 0.6);
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 1024px) {
+  .pd-recommendations {
+    grid-template-columns: 1fr;
+  }
+  
+  .pd-chapter-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .pd-header {
+    padding: 24px 20px 16px;
+  }
+  
+  .pd-tabs {
+    padding: 0 20px;
+  }
+  
+  .pd-content {
+    padding: 24px 20px;
+  }
+  
+  .pd-quick-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .pd-chapter-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .pd-mastered-list {
+    grid-template-columns: 1fr;
+  }
+}
+/* ============================================================================
+   ZYRA PROGRESS DASHBOARD — Polish Patch
+   Fixes: font consistency, stat card icons, hero layout,
+   tab styling, chapter cards, recommendation cards
+   ============================================================================ */
+
+/* ── Font consistency throughout ── */
+.pd-container,
+.pd-main,
+.pd-title,
+.pd-subtitle,
+.pd-tab,
+.pd-section-header h3,
+.pd-stat-value,
+.pd-stat-label,
+.pd-rec-topic,
+.pd-chapter-name,
+.pd-area-name {
+  font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+}
+
+/* ── Header upgrade ── */
+.pd-header {
+  padding: 32px 40px 28px;
+  background: rgba(8,14,31,.92);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+
+.pd-title {
+  font-size: 28px;
+  letter-spacing: -.03em;
+  gap: 12px;
+}
+
+.pd-title svg { width: 28px; height: 28px; }
+
+/* ── Tabs — pill style, not underline ── */
+.pd-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 16px 40px 0;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+
+.pd-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border-radius: 9px 9px 0 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  color: var(--text-muted, #64748b);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .18s;
+  font-family: var(--font-body, sans-serif);
+}
+
+.pd-tab:hover {
+  color: #f1f5f9;
+  background: rgba(255,255,255,.04);
+}
+
+.pd-tab.active {
+  color: #60a5fa;
+  background: rgba(37,99,235,.08);
+  border-color: rgba(96,165,250,.20);
+  border-bottom-color: #080e1f;
+}
+
+/* ── Hero — side by side on desktop ── */
+.pd-hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  align-items: start;
+  background: linear-gradient(135deg, rgba(37,99,235,.12) 0%, rgba(96,165,250,.06) 100%);
+  border: 1px solid rgba(96,165,250,.20);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 28px;
+}
+
+.pd-quick-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 160px;
+}
+
+/* ── Stat cards — coloured icons ── */
+.pd-stat-card {
+  padding: 14px 16px;
+  border-radius: 12px;
+  transition: transform .18s, box-shadow .18s;
+}
+.pd-stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+
+.pd-stat-card svg { color: #60a5fa; flex-shrink: 0; }
+.pd-stat-card.success svg { color: #10b981; }
+.pd-stat-card.streak svg { color: #fb923c; }
+
+.pd-stat-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #f1f5f9;
+  line-height: 1;
+  font-family: var(--font-body, 'DM Sans', sans-serif);
+}
+
+.pd-stat-label {
+  font-size: 11px;
+  color: var(--text-muted, #64748b);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-top: 2px;
+}
+
+/* ── Readiness percentage — single consolidated rule ── */
+.pd-readiness-percentage {
+  font-size: 64px;
+  font-weight: 800;
+  font-family: var(--font-body, 'DM Sans', sans-serif);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  /* No gradient — solid contextual color applied via .ready/.halfway/.early */
+  background: none;
+  -webkit-text-fill-color: unset;
+  -webkit-background-clip: unset;
+}
+
+.pd-readiness-percentage.ready   { color: #34d399; }
+.pd-readiness-percentage.halfway { color: #60a5fa; }
+.pd-readiness-percentage.early   { color: #fbbf24; }
+
+/* ── Recommendation cards ── */
+.pd-recommendations {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.pd-rec-card {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 20px;
+  transition: transform .2s, border-color .2s, box-shadow .2s;
+}
+.pd-rec-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(96,165,250,.28);
+  box-shadow: 0 6px 24px rgba(0,0,0,.25);
+}
+
+.pd-rec-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.pd-rec-emoji { font-size: 22px; }
+.pd-rec-topic { font-size: 15px; font-weight: 700; color: #f1f5f9; }
+
+.pd-rec-progress { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.pd-rec-bar { flex: 1; height: 6px; background: rgba(255,255,255,.08); border-radius: 3px; overflow: hidden; }
+.pd-rec-fill { height: 100%; background: linear-gradient(90deg, #2563eb, #60a5fa); border-radius: 3px; transition: width .5s ease; }
+.pd-rec-percent { font-size: 13px; font-weight: 700; color: #60a5fa; min-width: 36px; text-align: right; }
+
+.pd-rec-stats { display: flex; gap: 12px; margin-bottom: 10px; }
+.pd-rec-stat { display: flex; flex-direction: column; gap: 1px; }
+.pd-rec-stat-label { font-size: 10.5px; color: var(--text-muted, #64748b); text-transform: uppercase; letter-spacing: .06em; }
+.pd-rec-stat-value { font-size: 13px; font-weight: 700; color: #fcd34d; }
+
+.pd-rec-reason { font-size: 12.5px; color: var(--text-muted, #64748b); margin-bottom: 14px; line-height: 1.5; }
+
+.pd-rec-button {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; padding: 9px 16px;
+  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+  border: none; border-radius: 9px;
+  color: #fff; font-size: 13.5px; font-weight: 600;
+  font-family: var(--font-body, sans-serif);
+  cursor: pointer; transition: all .18s;
+}
+.pd-rec-button:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(37,99,235,.35); }
+
+/* ── Mastered topics ── */
+.pd-mastered-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.pd-mastered-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 12px;
+  background: rgba(16,185,129,.08);
+  border: 1px solid rgba(16,185,129,.20);
+  border-radius: 8px;
+  font-size: 13px;
+}
+.pd-check { color: #10b981; flex-shrink: 0; }
+.pd-mastered-name { font-weight: 600; color: #f1f5f9; }
+.pd-mastered-percent { font-size: 12px; color: #10b981; font-weight: 700; margin-left: 4px; }
+
+.pd-encouragement { font-size: 14px; color: var(--text-secondary, #94a3b8); font-style: italic; padding: 12px 16px; background: rgba(255,255,255,.03); border-radius: 8px; }
+.pd-encouragement.success { color: #10b981; background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.18); }
+
+/* ── Chapter cards ── */
+.pd-chapter-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.pd-unit-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted, #64748b); margin: 0 0 12px; padding-left: 4px; }
+
+.pd-chapter-card {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px; padding: 16px;
+  transition: transform .2s, border-color .2s;
+}
+.pd-chapter-card:hover { transform: translateY(-2px); border-color: rgba(96,165,250,.25); }
+
+.pd-chapter-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.pd-chapter-emoji { font-size: 20px; }
+.pd-chapter-name { font-size: 13px; font-weight: 600; color: #f1f5f9; line-height: 1.3; flex: 1; }
+.pd-chapter-progress { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.pd-chapter-bar { flex: 1; height: 5px; background: rgba(255,255,255,.08); border-radius: 3px; overflow: hidden; }
+.pd-chapter-fill { height: 100%; background: linear-gradient(90deg, #2563eb, #10b981); border-radius: 3px; transition: width .5s ease; }
+.pd-chapter-percent { font-size: 12px; font-weight: 700; color: #60a5fa; min-width: 30px; text-align: right; }
+.pd-chapter-info { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-muted, #64748b); margin-bottom: 12px; }
+.pd-chapter-practice {
+  width: 100%; padding: 7px; border: 1px solid rgba(96,165,250,.25);
+  background: rgba(37,99,235,.08); border-radius: 7px;
+  color: #60a5fa; font-size: 12.5px; font-weight: 600;
+  font-family: var(--font-body, sans-serif); cursor: pointer;
+  transition: all .15s;
+}
+.pd-chapter-practice:hover { background: rgba(37,99,235,.16); border-color: #60a5fa; }
+
+/* ── Chart container ── */
+.pd-chart-container { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 14px; padding: 20px; }
+.pd-chart-container.large { padding: 24px; }
+
+/* ── Streak card ── */
+.pd-streak-card {
+  display: flex; align-items: center; gap: 20px;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, rgba(251,146,60,.12), rgba(251,191,36,.08));
+  border: 1px solid rgba(251,146,60,.25);
+  border-radius: 16px; margin-bottom: 24px;
+}
+.pd-streak-icon { color: #fb923c; }
+.pd-streak-number { font-family: var(--font-body, 'DM Sans', sans-serif); font-size: 52px; font-weight: 800; color: #fb923c; line-height: 1; display: block; }
+.pd-streak-label { font-size: 14px; font-weight: 600; color: #fcd34d; }
+.pd-streak-info { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-muted, #64748b); margin-top: 4px; }
+
+/* ── Activity summary ── */
+.pd-activity-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+.pd-summary-item { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; padding: 14px 16px; text-align: center; }
+.pd-summary-label { font-size: 11px; color: var(--text-muted, #64748b); text-transform: uppercase; letter-spacing: .07em; display: block; margin-bottom: 4px; }
+.pd-summary-value { font-size: 18px; font-weight: 800; color: #f1f5f9; font-family: var(--font-body, 'DM Sans', sans-serif); }
+
+/* ── Area cards ── */
+.pd-area-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; padding: 20px; margin-bottom: 12px; transition: border-color .2s; }
+.pd-area-card:hover { border-color: rgba(96,165,250,.25); }
+.pd-area-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.pd-area-name { font-size: 16px; font-weight: 700; color: #f1f5f9; }
+.pd-area-marks { padding: 4px 10px; background: rgba(251,191,36,.10); border: 1px solid rgba(251,191,36,.22); border-radius: 99px; font-size: 12px; font-weight: 700; color: #fcd34d; }
+.pd-area-progress { margin-bottom: 12px; }
+.pd-area-bar { height: 8px; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+.pd-area-fill { height: 100%; background: linear-gradient(90deg, #2563eb, #10b981); border-radius: 4px; transition: width .5s ease; }
+.pd-area-stats { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--text-muted, #64748b); }
+.pd-area-chapters { display: flex; gap: 8px; align-items: baseline; margin-bottom: 12px; }
+.pd-area-label { font-size: 11px; font-weight: 700; color: var(--text-muted, #64748b); text-transform: uppercase; letter-spacing: .07em; flex-shrink: 0; }
+.pd-area-chapter-list { font-size: 12.5px; color: var(--text-secondary, #94a3b8); }
+.pd-area-metrics { display: flex; gap: 20px; }
+.pd-area-metric { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.pd-area-metric span:first-child { font-size: 20px; font-weight: 800; color: #f1f5f9; font-family: var(--font-body, 'DM Sans', sans-serif); }
+.pd-metric-label { font-size: 11px; color: var(--text-muted, #64748b); text-transform: uppercase; letter-spacing: .07em; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) { .pd-hero { grid-template-columns: 1fr; } .pd-quick-stats { flex-direction: row; flex-wrap: wrap; } .pd-recommendations { grid-template-columns: 1fr; } .pd-activity-summary { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 768px) { .pd-header, .pd-content { padding: 20px; } .pd-tabs { padding: 0 20px; overflow-x: auto; } .pd-chapter-grid { grid-template-columns: 1fr 1fr; } }
