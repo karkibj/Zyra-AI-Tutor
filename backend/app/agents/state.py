@@ -50,14 +50,15 @@ class AgentState(BaseModel):
     curriculum_check: Optional[Dict] = None  # Prerequisites, related topics
     explanation: Optional[str] = None  # Main explanation
     examples: List[str] = Field(default_factory=list)  # Worked examples
-    practice_questions: List[Dict] = Field(default_factory=list)  # Generated questions
-    
+    # Visualization
+    visualization_svg: Optional[str] = None  # SVG markup if visual was generated
+    needs_visualization: bool = False
+
     # Final output
     final_answer: Optional[str] = None
     sources: List[Dict] = Field(default_factory=list)
     
     # Metadata
-    processing_time: float = 0.0
     agent_path: List[str] = Field(default_factory=list)  # Track which agents ran
     
     class Config:
