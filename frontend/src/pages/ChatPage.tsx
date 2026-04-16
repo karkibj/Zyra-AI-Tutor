@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/Sidebar';
@@ -6,6 +6,7 @@ import ChatMessage from '../components/ChatMessage';
 import MessageInput from '../components/MessageInput';
 import { tutorApi, type TutorQueryResponse } from '../services/api';
 import '../styles/ChatPage.css';
+import { BookOpen, Zap, TrendingUp, RefreshCw, Bot } from 'lucide-react';
 
 export interface Message {
   id: number;
@@ -15,6 +16,7 @@ export interface Message {
     intent?: string;
     chunkCount?: number;
     responseTime?: number;
+    topic?: string;
   };
   sources?: Array<{
     content_id: string;
@@ -22,64 +24,203 @@ export interface Message {
     score: number;
     chapter?: string;
   }>;
+  showActions?: boolean;
 }
+
+interface CDCChapter {
+  id: number;       // chapter_id from backend (1-based)
+  name: string;
+  code?: string;
+  color: string;    // derived from id, no hardcoding
+}
+
+// Color palette — one per chapter slot, derived from chapter_id.
+// No hardcoded chapter names anywhere.
+const CHAPTER_COLORS = [
+  '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899',
+  '#ef4444', '#6366f1', '#fbbf24', '#14b8a6', '#f97316',
+  '#84cc16', '#06b6d4', '#a855f7', '#e11d48', '#0ea5e9',
+];
+
+const getChapterColor = (id: number): string =>
+  CHAPTER_COLORS[(id - 1) % CHAPTER_COLORS.length] ?? '#60a5fa';
+
+// Minimal fallback shown only while the backend request is in-flight.
+// Chapter names match the CDC curriculum — no emoji, no Nepali duplicates.
+const DEFAULT_CHAPTERS: CDCChapter[] = [
+  { id: 1,  name: 'Sets',                       color: getChapterColor(1)  },
+  { id: 2,  name: 'Compound Interest',           color: getChapterColor(2)  },
+  { id: 3,  name: 'Growth and Depreciation',     color: getChapterColor(3)  },
+  { id: 4,  name: 'Currency and Exchange Rate',  color: getChapterColor(4)  },
+  { id: 5,  name: 'Area and Volume',             color: getChapterColor(5)  },
+  { id: 6,  name: 'Sequence and Series',         color: getChapterColor(6)  },
+  { id: 7,  name: 'Quadratic Equation',          color: getChapterColor(7)  },
+  { id: 8,  name: 'Algebraic Fraction',          color: getChapterColor(8)  },
+  { id: 9,  name: 'Indices',                     color: getChapterColor(9)  },
+  { id: 10, name: 'Triangles and Quadrilaterals',color: getChapterColor(10) },
+  { id: 11, name: 'Construction',                color: getChapterColor(11) },
+  { id: 12, name: 'Circle',                      color: getChapterColor(12) },
+  { id: 13, name: 'Statistics',                  color: getChapterColor(13) },
+  { id: 14, name: 'Probability',                 color: getChapterColor(14) },
+  { id: 15, name: 'Trigonometry',                color: getChapterColor(15) },
+];
+
+function extractTopicFromContent(response: string, question: string, chapters: CDCChapter[]): string | undefined {
+  const allText = `${question} ${response}`.toLowerCase();
+  for (const chapter of chapters) {
+    if (allText.includes(chapter.name.toLowerCase())) {
+      return chapter.name;
+    }
+  }
+  return undefined;
+}
+
+// Time-based greeting helper
+const getGreeting = (): string => {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'सुप्रभात';
+  if (hour < 17) return 'नमस्ते';
+  return 'शुभ सन्ध्या';
+};
 
 const ChatPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user, logout, isAdmin } = useAuth();
-  
-  const selectedTopic = location.state?.selectedTopic || 'General Mathematics';
-  
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      role: 'tutor',
-      content: `# नमस्ते ${user?.full_name || 'Student'}! Welcome to Zyra! 👋
 
-I'm your **AI Mathematics Tutor** for **Grade 10 CDC Curriculum**. 🎓
+  const selectedTopic = location.state?.selectedTopic || null;
 
-I'm powered by a **multi-agent AI system** that can help you with:
+  // Derived name + greeting — only for empty state display
+  const firstName = useMemo(() =>
+    user?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Student',
+    [user]
+  );
+  const greeting = useMemo(() => getGreeting(), []);
 
-- 📚 **Concept Explanations** - Clear, step-by-step teaching
-- ✍️ **Problem Solving** - With detailed workings
-- 🧮 **Mathematical Formulas** - With LaTeX rendering: $E = mc^2$
-- 💡 **Practice Questions** - Adaptive to your level
-- ✅ **Answer Checking** - Instant feedback
+  // Welcome message — only used when a topic is pre-selected
+  const getWelcomeMessage = (): Message => {
+    if (selectedTopic) {
+      return {
+        id: 1,
+        role: 'tutor',
+        content: `# ${selectedTopic} सिक्न तयार हुनुहुन्छ? 🎯\n\nनमस्ते ${firstName}! म तपाईंलाई ${selectedTopic} मा मद्दत गर्न तयार छु।\n\n**के गर्न चाहनुहुन्छ?**\n\nतल बटन थिच्नुहोस् या सिधै प्रश्न सोध्नुहोस्! 💬`,
+        showActions: true,
+        metadata: { topic: selectedTopic }
+      };
+    }
+    // Empty array — empty state UI handles the welcome display
+    return null as any;
+  };
 
-**Currently helping with:** ${selectedTopic}
+  const [messages, setMessages] = useState<Message[]>(
+    selectedTopic ? [getWelcomeMessage()] : []
+  );
 
-💬 Ask me anything! Try: *"What is compound interest?"* or *"Solve: $x^2 - 5x + 6 = 0$"*`,
-    },
-  ]);
-  
   const [isLoading, setIsLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'checking'>('checking');
   const [currentResponseTime, setCurrentResponseTime] = useState<number | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string>(() => {
+    const newId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    sessionStorage.setItem('current_chat_session', newId);
+    return newId;
+  });
   const [agentPath, setAgentPath] = useState<string[]>([]);
+  const [cdcChapters, setCdcChapters] = useState<CDCChapter[]>(DEFAULT_CHAPTERS);
+  const [loadingChapters, setLoadingChapters] = useState(true);
 
-  // Check backend connection on mount
+  // isEmpty — true when no real conversation yet
+  const isEmpty = messages.length === 0;
+
   useEffect(() => {
     checkConnection();
-  }, []);
+    loadCDCChapters();
 
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (location.state?.loadSession) {
+      loadConversation(location.state.loadSession);
+    } else if (location.state?.newChat) {
+      const newId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      sessionStorage.setItem('current_chat_session', newId);
+      setSessionId(newId);
+      setMessages([]);
+      setAgentPath([]);
+      setCurrentResponseTime(null);
+    }
+  }, [location.state?.loadSession, location.state?.newChat]);
+
+  const loadConversation = async (sessionIdToLoad: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/chat-history/conversation/${sessionIdToLoad}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+
+      if (response.ok) {
+        const conversation = await response.json();
+        const loadedMessages: Message[] = conversation.messages.map((msg: any, idx: number) => ({
+          id: idx + 1,
+          role: msg.role,
+          content: msg.content,
+          metadata: msg.metadata,
+          showActions: idx === conversation.messages.length - 1 && msg.role === 'tutor'
+        }));
+
+        setMessages(loadedMessages);
+        setSessionId(sessionIdToLoad);
+        sessionStorage.setItem('current_chat_session', sessionIdToLoad);
+      }
+    } catch (error) {
+      console.error('Failed to load conversation:', error);
+    }
+  };
+
+  const saveMessageToHistory = async (role: 'user' | 'tutor', content: string, metadata?: any) => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/chat-history/save-message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ session_id: sessionId || 'default-session', role, content, metadata })
+      });
+    } catch (error) {
+      console.error('Failed to save message to history:', error);
+    }
+  };
+
+  useEffect(() => { scrollToBottom(); }, [messages]);
+
+  const loadCDCChapters = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/progress/chapters`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+
+      if (response.ok) {
+        const chapters = await response.json();
+        // chapter_id comes from the backend (1-based order).
+        // Color is derived from chapter_id — no hardcoded name mapping needed.
+        const mappedChapters: CDCChapter[] = chapters.map((ch: any) => ({
+          id:    ch.chapter_id,
+          name:  ch.chapter_name,
+          code:  ch.chapter_code,
+          color: getChapterColor(ch.chapter_id),
+        }));
+        setCdcChapters(mappedChapters);
+      }
+    } catch {
+      // Falls back to DEFAULT_CHAPTERS silently
+    } finally {
+      setLoadingChapters(false);
+    }
+  };
 
   const checkConnection = async () => {
     setConnectionStatus('checking');
     const isHealthy = await tutorApi.healthCheck();
     setConnectionStatus(isHealthy ? 'connected' : 'disconnected');
-    
-    if (!isHealthy) {
-      console.warn('⚠️ Backend is not responding. Make sure server is running on http://localhost:8000');
-    } else {
-      console.log('✅ Connected to Zyra backend (LangGraph multi-agent system)');
-    }
   };
 
   const scrollToBottom = () => {
@@ -93,54 +234,52 @@ I'm powered by a **multi-agent AI system** that can help you with:
     }
   };
 
-  const handleGoToAdmin = () => {
-    navigate('/admin');
+  const handleGoToAdmin = () => navigate('/admin');
+
+  // Chapter chip clicked — send directly, handleSendMessage adds the user message itself
+  const handleTopicSelect = (topicName: string) => {
+    handleSendMessage(`${topicName} भनेको के हो? मलाई सिकाउनुहोस्।`);
+  };
+
+  const handleQuickAction = (action: string, topic?: string) => {
+    const currentTopic = topic || messages[messages.length - 1]?.metadata?.topic;
+    switch (action) {
+      case 'practice':
+        navigate('/practice', { state: { topic: currentTopic } });
+        break;
+      case 'more_examples':
+        if (currentTopic) handleSendMessage(`${currentTopic} को अर्को example देखाउनुहोस्`);
+        break;
+      case 'view_progress':
+        navigate('/progress');
+        break;
+    }
   };
 
   const handleSendMessage = async (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed || isLoading) return;
+    if (!text.trim() || isLoading) return;
 
-    // Add user message
+    setIsLoading(true);
+
     const userMessage: Message = {
       id: Date.now(),
       role: 'user',
-      content: trimmed,
+      content: text,
     };
 
-    setMessages((prev) => [...prev, userMessage]);
-    setIsLoading(true);
-    setCurrentResponseTime(null);
-
-    const startTime = Date.now();
+    setMessages(prev => [...prev, userMessage]);
+    saveMessageToHistory('user', text);
 
     try {
-      // Call LangGraph backend API
-      const chapterCode = selectedTopic.toLowerCase().replace(/\s+/g, '_');
-      
-      const response: TutorQueryResponse = await tutorApi.askQuestion(
-        trimmed, 
-        chapterCode,
-        sessionId || undefined
-      );
-      
-      const endTime = Date.now();
-      const clientResponseTime = (endTime - startTime) / 1000;
-      
-      // Save session ID for conversation continuity
-      if (response.session_id && !sessionId) {
-        setSessionId(response.session_id);
-        console.log('📝 Session started:', response.session_id);
-      }
-      
-      
-      // Track agent path if available
-      if (response.metadata?.agent_path) {
-        setAgentPath(response.metadata.agent_path);
-        console.log('🤖 Agents used:', response.metadata.agent_path.join(' → '));
-      }
-      
-      // Add tutor response with metadata
+      const startTime = Date.now();
+      const response: TutorQueryResponse = await tutorApi.askQuestion(text, undefined, sessionId);
+      const responseTime = (Date.now() - startTime) / 1000;
+
+      setCurrentResponseTime(responseTime);
+      setSessionId(response.session_id || sessionId);
+
+      if (response.agent_path) setAgentPath(response.agent_path);
+
       const tutorMessage: Message = {
         id: Date.now() + 1,
         role: 'tutor',
@@ -149,208 +288,237 @@ I'm powered by a **multi-agent AI system** that can help you with:
           intent: response.intent,
           chunkCount: response.chunk_count,
           responseTime: response.response_time,
+          topic: response.metadata?.topic || extractTopicFromContent(response.answer, text, cdcChapters)
         },
-        sources: response.sources,
+        sources: response.sources || [],
+        showActions: true
       };
-      
-      setMessages((prev) => [...prev, tutorMessage]);
-      setCurrentResponseTime(clientResponseTime);
-      
-      // Log successful response
-      console.log('✅ Zyra responded:', {
+
+      setMessages(prev => [...prev, tutorMessage]);
+      await saveMessageToHistory('tutor', response.answer, {
         intent: response.intent,
-        sources: response.chunk_count,
-        backendTime: response.response_time.toFixed(2) + 's',
-        totalTime: clientResponseTime.toFixed(2) + 's',
-        agentPath: response.metadata?.agent_path || 'N/A',
+        topic: tutorMessage.metadata?.topic,
+        sources: response.sources
       });
-      
-    } catch (error) {
-      console.error('❌ Error communicating with Zyra:', error);
-      
-      // User-friendly error message
+
+    } catch (error: any) {
+      console.error('Error asking question:', error);
       const errorMessage: Message = {
         id: Date.now() + 1,
         role: 'tutor',
-        content: `# ❌ Connection Error
-
-I'm having trouble connecting to the backend server.
-
-**Possible solutions:**
-- Make sure the backend server is running: \`uvicorn app.main:app --reload\`
-- Check that it's accessible at: \`http://localhost:8000\`
-- Verify the vector store is initialized
-- Try refreshing the page
-
-**Error details:** ${error instanceof Error ? error.message : 'Unknown error'}
-
-**Need help?** Check the console logs for more details.`,
+        content: `माफ गर्नुहोस्, मलाई समस्या भयो। 😔\n\nकृपया फेरि प्रयास गर्नुहोस् या backend चालु छ कि जाँच गर्नुहोस्।\n\nError: ${error.message || 'Unknown error'}`,
       };
-      
-      setMessages((prev) => [...prev, errorMessage]);
-      setConnectionStatus('disconnected');
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleNewChat = () => {
+    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    setSessionId(newSessionId);
+    sessionStorage.setItem('current_chat_session', newSessionId);
+    setMessages([]);
+    setAgentPath([]);
+    setCurrentResponseTime(null);
+  };
+
   return (
     <div className="chat-page-container">
       <Sidebar />
-      
+
       <main className="chat-main">
-        {/* Enhanced Header with Auth */}
+
+        {/* Header */}
         <header className="chat-header">
           <div className="chat-header-left">
-            <div className="logo-section">
-              <span className="logo-icon">🎓</span>
-              <span className="logo-text">Zyra AI Tutor</span>
-            </div>
             <div className="chat-topic-info">
-              <h2 className="chat-topic-title">{selectedTopic}</h2>
+              <h1 className="chat-topic-title">AI Tutor</h1>
               <div className="chat-status">
                 <span className={`status-dot ${connectionStatus}`}></span>
                 <span className="status-text">
-                  {connectionStatus === 'connected' && '✓ Multi-Agent AI Active'}
-                  {connectionStatus === 'disconnected' && '✗ Disconnected'}
-                  {connectionStatus === 'checking' && '⟳ Connecting...'}
+                  {connectionStatus === 'connected' ? 'Connected' :
+                   connectionStatus === 'checking' ? 'Connecting...' : 'Disconnected'}
                 </span>
               </div>
             </div>
           </div>
-          
-          <div className="chat-header-right">
-            {/* Session indicator */}
-            {sessionId && (
-              <div className="session-badge" title="Active conversation session">
-                💬 Session Active
-              </div>
-            )}
-            
-            {/* Response time */}
+
+          <div className="chat-header-actions">
             {currentResponseTime && (
               <div className="response-time-badge">
-                ⚡ {currentResponseTime.toFixed(1)}s
-              </div>
-            )}
-            
-            {/* Agent path indicator */}
-            {agentPath.length > 0 && (
-              <div className="agent-path-badge" title={`Agent workflow: ${agentPath.join(' → ')}`}>
-                🤖 {agentPath.length} agents
-              </div>
-            )}
-
-            {/* User Info & Actions */}
-            {user && (
-              <div className="user-section">
-                <div className="user-info">
-                  {user.picture ? (
-                    <img src={user.picture} alt={user.full_name} className="user-avatar" />
-                  ) : (
-                    <div className="user-avatar-placeholder">
-                      {user.full_name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div className="user-details">
-                    <span className="user-name">{user.full_name}</span>
-                    <span className="user-role">{user.role}</span>
-                  </div>
-                </div>
-
-                <div className="user-actions">
-                  {isAdmin && (
-                    <button onClick={handleGoToAdmin} className="admin-btn" title="Go to Admin Dashboard">
-                      ⚙️ Admin
-                    </button>
-                  )}
-                  <button onClick={handleLogout} className="logout-btn" title="Logout">
-                    🚪 Logout
-                  </button>
-                </div>
+                <Zap size={12} />
+                {currentResponseTime.toFixed(1)}s
               </div>
             )}
           </div>
         </header>
 
-        {/* Messages Area */}
-        <div className="chat-messages-container">
-          <div className="chat-messages">
-            {messages.map((message) => (
-              <ChatMessage
-                key={message.id}
-                role={message.role}
-                content={message.content}
-                metadata={message.metadata}
-                sources={message.sources}
-              />
-            ))}
-            
-            {isLoading && (
-              <ChatMessage
-                role="tutor"
-                content="🤔 Analyzing your question with multi-agent system..."
-                isTyping
-              />
-            )}
-            
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
+        {/* ── EMPTY STATE — shown when no messages yet ── */}
+        {isEmpty ? (
+          <div className="chat-empty-state">
+            <div className="chat-empty-inner">
 
-        {/* Enhanced Input Area */}
-        <div className="chat-input-container">
-          <MessageInput
-            onSend={handleSendMessage}
-            disabled={isLoading || connectionStatus === 'disconnected'}
-            placeholder={
-              connectionStatus === 'disconnected' 
-                ? '⚠️ Backend disconnected. Start the server first...'
-                : isLoading
-                ? '⏳ Zyra is thinking...'
-                : '💬 Ask Zyra anything about mathematics...'
-            }
-          />
-          
-          {/* Enhanced hints */}
-          {messages.length === 1 && connectionStatus === 'connected' && (
-            <div className="input-hints">
-              <div className="hint-section">
-                <span className="hint-label">💡 Try asking:</span>
-                <div className="hint-examples">
-                  <button className="hint-btn" onClick={() => handleSendMessage("What is compound interest?")}>
-                    "What is compound interest?"
-                  </button>
-                  <button className="hint-btn" onClick={() => handleSendMessage("Solve: x² - 5x + 6 = 0")}>
-                    "Solve: x² - 5x + 6 = 0"
-                  </button>
-                  <button className="hint-btn" onClick={() => handleSendMessage("Explain quadratic formula")}>
-                    "Explain quadratic formula"
-                  </button>
-                </div>
+              {/* Greeting */}
+              <div className="chat-empty-greeting">
+                {greeting}, <em>{firstName}</em>!
               </div>
+              <p className="chat-empty-subtitle">
+                तपाईंको SEE Mathematics tutor — के सिक्न चाहनुहुन्छ आज?
+              </p>
+
+              {/* Input — centered, prominent */}
+              <div className="chat-empty-input">
+                <MessageInput
+                  onSendMessage={handleSendMessage}
+                  isLoading={isLoading}
+                  placeholder="प्रश्न सोध्नुहोस्... (या English मा type गर्नुहोस्)"
+                />
+              </div>
+
+              {/* Chapter chips */}
+              <div className="chat-empty-chapters">
+                <p className="chat-empty-chapters-label">
+                  <BookOpen size={14} />
+                  <span>वा एउटा chapter छान्नुहोस्</span>
+                </p>
+                {loadingChapters ? (
+                  <div className="loading-chapters">Loading chapters...</div>
+                ) : (
+                  <div className="chat-empty-chips">
+                    {cdcChapters.map(chapter => (
+                      <button
+                        key={chapter.id}
+                        className="topic-chip"
+                        onClick={() => handleTopicSelect(chapter.name)}
+                        style={{ '--chip-color': chapter.color } as React.CSSProperties}
+                      >
+                        <span className="topic-name">{chapter.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
             </div>
-          )}
-          
-          {/* Connection warning */}
-          {connectionStatus === 'disconnected' && (
-            <div className="connection-warning">
-              ⚠️ <strong>Backend not connected.</strong> Run: <code>uvicorn app.main:app --reload</code>
+          </div>
+        ) : (
+          /* ── CONVERSATION STATE ── */
+          <div className="chat-messages-container">
+            <div className="chat-messages">
+              {messages.map((message, index) => (
+                <div key={message.id}>
+                  <ChatMessage message={message} />
+
+                  {/* Retry button */}
+                  {message.role === 'tutor' && index === messages.length - 1 && !isLoading &&
+                    (message.content.includes('temporarily busy') || message.content.includes('high usage')) && (
+                    <div className="retry-container">
+                      <button
+                        className="retry-btn"
+                        onClick={() => {
+                          const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+                          if (lastUserMsg) {
+                            setMessages(prev => prev.slice(0, -1));
+                            handleSendMessage(lastUserMsg.content);
+                          }
+                        }}
+                      >
+                        <RefreshCw size={14} /> Try Again
+                      </button>
+                      <span className="retry-hint">Zyra is busy — tap to retry</span>
+                    </div>
+                  )}
+
+                  {/* Context-aware action buttons after tutor response */}
+                  {message.role === 'tutor' && message.showActions && index === messages.length - 1 && !isLoading && (() => {
+                    const intent     = (message.metadata?.intent || '').toUpperCase();
+                    const topic      = message.metadata?.topic || '';
+                    const isMath     = intent === 'MATHEMATICAL_QUERY';
+                    const isGreeting = intent === 'GREETING' || intent === 'FEEDBACK' || intent === 'OFF_TOPIC' || intent === 'CLARIFICATION';
+                    const hasProgress = messages.filter(m => m.role === 'user').length >= 3;
+                    const alreadyHasExample = (message.content || '').toLowerCase().includes('worked example') ||
+                                              (message.content || '').toLowerCase().includes('step 1');
+
+                    if (isGreeting || !isMath) return null;
+
+                    return (
+                      <div className="message-actions">
+                        <div className="chat-action-buttons">
+                          <button
+                            className="action-btn primary"
+                            onClick={() => handleQuickAction('practice', topic)}
+                            title={topic ? `Practice ${topic} questions` : 'Practice questions'}
+                          >
+                            <Zap size={16} />
+                            {topic ? `Practice ${topic.split(' ')[0]}` : 'Practice गर्नुहोस्'}
+                          </button>
+
+                          {!alreadyHasExample && (
+                            <button
+                              className="action-btn secondary"
+                              onClick={() => handleQuickAction('more_examples', topic)}
+                            >
+                              <BookOpen size={16} />
+                              Example देखाउनुहोस्
+                            </button>
+                          )}
+
+                          {hasProgress && (
+                            <button
+                              className="action-btn secondary"
+                              onClick={() => handleQuickAction('view_progress')}
+                            >
+                              <TrendingUp size={16} />
+                              Progress हेर्नुहोस्
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              ))}
+
+              {/* Loading indicator */}
+              {isLoading && (
+                <div className="typing-indicator-container">
+                  <div className="typing-indicator">
+                    <div className="typing-avatar"><Bot size={18} /></div>
+                    <div className="typing-content">
+                      <div className="typing-text">Zyra सोचदै छ...</div>
+                      <div className="typing-dots">
+                        <span></span><span></span><span></span>
+                      </div>
+                      {agentPath.length > 0 && (
+                        <div className="agent-path">
+                          Searching {agentPath[agentPath.length - 1]}...
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Input — only shown during conversation, empty state has its own */}
+        {!isEmpty && (
+          <div className="chat-input-container">
+            <MessageInput
+              onSendMessage={handleSendMessage}
+              isLoading={isLoading}
+              placeholder="प्रश्न सोध्नुहोस्... (या English मा type गर्नुहोस्)"
+            />
+          </div>
+        )}
+
       </main>
     </div>
   );
 };
-
-import { Link } from 'react-router-dom';
-import { FileText } from 'lucide-react';
-
-// Add this somewhere visible in your ChatPage:
-<Link to="/past-papers" className="past-papers-link">
-  <FileText size={20} />
-  View Past Papers
-</Link>
 
 export default ChatPage;

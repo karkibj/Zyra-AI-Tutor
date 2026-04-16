@@ -1,0 +1,6 @@
+/*
+  ChatEnhancements.css — intentionally empty.
+  All styles merged into ChatPage.css.
+  Keeping this file because ChatMessage.tsx imports it — removing it
+  would cause a build error.
+*/

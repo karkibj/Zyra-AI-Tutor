@@ -1,0 +1,429 @@
+/* =============================================================================
+   ZYRA DESIGN TOKENS — Single source of truth for all pages
+   Import this FIRST in every page CSS file:
+     @import '../styles/zyra-tokens.css';
+   =============================================================================
+   Fonts used: Syne (display/headings) + DM Sans (body)
+   Already loaded via ChatPage.css — no need to re-import per page.
+   ============================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+
+/* ── Brand palette ─────────────────────────────────────────────────────────── */
+:root {
+  /* Blue — primary action, navigation, AI identity */
+  --z-blue-900:  #1e3a8a;
+  --z-blue-800:  #1e40af;
+  --z-blue-700:  #1d4ed8;
+  --z-blue-600:  #2563eb;   /* PRIMARY */
+  --z-blue-500:  #3b82f6;
+  --z-blue-400:  #60a5fa;
+  --z-blue-300:  #93c5fd;
+  --z-blue-200:  #bfdbfe;
+  --z-blue-100:  #dbeafe;
+  --z-blue-50:   #eff6ff;
+
+  /* Gold — reward, highlights, Nepali cultural accent */
+  --z-gold-700:  #b45309;
+  --z-gold-600:  #d97706;
+  --z-gold-500:  #f59e0b;
+  --z-gold-400:  #fbbf24;   /* PRIMARY GOLD */
+  --z-gold-300:  #fcd34d;
+  --z-gold-200:  #fde68a;
+  --z-gold-100:  #fef3c7;
+  --z-gold-50:   #fffbeb;
+
+  /* Slate — surfaces, text, structure */
+  --z-slate-950: #020617;
+  --z-slate-900: #0f172a;
+  --z-slate-800: #1e293b;
+  --z-slate-700: #334155;
+  --z-slate-600: #475569;
+  --z-slate-500: #64748b;
+  --z-slate-400: #94a3b8;
+  --z-slate-300: #cbd5e1;
+  --z-slate-200: #e2e8f0;
+  --z-slate-100: #f1f5f9;
+  --z-slate-50:  #f8fafc;
+
+  /* Status */
+  --z-success:      #10b981;
+  --z-success-bg:   #d1fae5;
+  --z-success-text: #065f46;
+  --z-warning:      #f59e0b;
+  --z-warning-bg:   #fef3c7;
+  --z-warning-text: #92400e;
+  --z-error:        #ef4444;
+  --z-error-bg:     #fee2e2;
+  --z-error-text:   #991b1b;
+  --z-info:         #3b82f6;
+  --z-info-bg:      #dbeafe;
+  --z-info-text:    #1e40af;
+
+  /* ── DARK THEME (default — all student-facing pages) ── */
+  --bg-base:        #080e1f;    /* deepest background */
+  --bg-surface:     #0f172a;    /* sidebar, cards */
+  --bg-elevated:    #1e293b;    /* hover states, inputs */
+  --bg-glass:       rgba(255, 255, 255, 0.05);
+  --bg-glass-hover: rgba(255, 255, 255, 0.08);
+
+  --border-subtle:  rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.10);
+  --border-strong:  rgba(255, 255, 255, 0.18);
+  --border-blue:    rgba(37, 99, 235, 0.35);
+  --border-gold:    rgba(251, 191, 36, 0.35);
+
+  --text-primary:   #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted:     #64748b;
+  --text-blue:      #60a5fa;
+  --text-gold:      #fcd34d;
+
+  /* ── LIGHT THEME (admin pages) ── */
+  --admin-bg-base:     #f8fafc;
+  --admin-bg-surface:  #ffffff;
+  --admin-bg-elevated: #f1f5f9;
+  --admin-border:      #e2e8f0;
+  --admin-text:        #0f172a;
+  --admin-text-sub:    #64748b;
+  --admin-text-muted:  #94a3b8;
+
+  /* ── Typography ── */
+  --font-display: 'Syne', sans-serif;
+  --font-body:    'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:    'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  /* ── Spacing scale ── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ── Border radius ── */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  14px;
+  --radius-xl:  20px;
+  --radius-2xl: 28px;
+  --radius-pill: 999px;
+
+  /* ── Shadows ── */
+  --shadow-sm:   0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --shadow-md:   0 4px 16px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.10);
+  --shadow-lg:   0 10px 32px rgba(0,0,0,.24), 0 4px 12px rgba(0,0,0,.12);
+  --shadow-blue: 0 4px 20px rgba(37,99,235,.30);
+  --shadow-gold: 0 4px 20px rgba(251,191,36,.25);
+
+  /* ── Transitions ── */
+  --ease-fast:   150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-base:   220ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-slow:   350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Sidebar width ── */
+  --sidebar-w: 268px;
+
+  /* ── Z-index layers ── */
+  --z-base:    1;
+  --z-raised:  10;
+  --z-overlay: 100;
+  --z-modal:   1000;
+  --z-toast:   2000;
+}
+
+/* ── Global resets ─────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html { font-size: 16px; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ── Scrollbar (dark) ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: var(--border-strong); border-radius: var(--radius-pill); }
+::-webkit-scrollbar-thumb:hover { background: var(--z-blue-600); }
+
+/* ── Focus ring ────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--z-blue-500);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Shared reusable utility classes ──────────────────────────────────────── */
+
+/* Loading skeleton shimmer */
+.z-skeleton {
+  background: linear-gradient(90deg,
+    var(--bg-elevated) 25%,
+    rgba(255,255,255,.06) 50%,
+    var(--bg-elevated) 75%
+  );
+  background-size: 200% 100%;
+  animation: z-shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+@keyframes z-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* Badge */
+.z-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  letter-spacing: .03em;
+}
+
+.z-badge--blue   { background: rgba(37,99,235,.15);  color: var(--z-blue-400);  border: 1px solid rgba(37,99,235,.25); }
+.z-badge--gold   { background: rgba(251,191,36,.12); color: var(--z-gold-300);  border: 1px solid rgba(251,191,36,.25); }
+.z-badge--green  { background: rgba(16,185,129,.12); color: #6ee7b7;            border: 1px solid rgba(16,185,129,.25); }
+.z-badge--red    { background: rgba(239,68,68,.12);  color: #fca5a5;            border: 1px solid rgba(239,68,68,.25); }
+.z-badge--muted  { background: rgba(255,255,255,.05); color: var(--text-muted); border: 1px solid var(--border-default); }
+
+/* Button base */
+.z-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 20px;
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  transition: all var(--ease-base);
+  white-space: nowrap;
+  letter-spacing: .01em;
+  text-decoration: none;
+}
+
+.z-btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.z-btn--primary {
+  background: var(--z-blue-600);
+  color: #fff;
+  box-shadow: var(--shadow-blue);
+}
+.z-btn--primary:hover:not(:disabled) {
+  background: var(--z-blue-700);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(37,99,235,.40);
+}
+
+.z-btn--gold {
+  background: var(--z-gold-400);
+  color: var(--z-slate-900);
+  box-shadow: var(--shadow-gold);
+}
+.z-btn--gold:hover:not(:disabled) {
+  background: var(--z-gold-500);
+  transform: translateY(-1px);
+}
+
+.z-btn--ghost {
+  background: var(--bg-glass);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+}
+.z-btn--ghost:hover:not(:disabled) {
+  background: var(--bg-glass-hover);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.z-btn--outline-blue {
+  background: transparent;
+  color: var(--z-blue-400);
+  border: 1.5px solid var(--border-blue);
+}
+.z-btn--outline-blue:hover:not(:disabled) {
+  background: rgba(37,99,235,.10);
+  border-color: var(--z-blue-500);
+}
+
+.z-btn--sm { padding: 6px 14px; font-size: 12px; border-radius: var(--radius-md); }
+.z-btn--lg { padding: 13px 28px; font-size: 15px; }
+.z-btn--icon { padding: 8px; border-radius: var(--radius-md); }
+
+/* Progress bar */
+.z-progress {
+  height: 7px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.z-progress__fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--z-blue-600), var(--z-blue-400));
+  transition: width var(--ease-slow);
+}
+.z-progress__fill--gold {
+  background: linear-gradient(90deg, var(--z-gold-600), var(--z-gold-400));
+}
+.z-progress__fill--green {
+  background: linear-gradient(90deg, #059669, #10b981);
+}
+
+/* Input */
+.z-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color var(--ease-fast), box-shadow var(--ease-fast);
+}
+.z-input::placeholder { color: var(--text-muted); }
+.z-input:focus {
+  border-color: var(--z-blue-600);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+
+/* Card */
+.z-card {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  transition: border-color var(--ease-base), box-shadow var(--ease-base);
+}
+.z-card:hover {
+  border-color: var(--border-strong);
+}
+.z-card--accent-blue { border-left: 3px solid var(--z-blue-600); }
+.z-card--accent-gold { border-top: 3px solid var(--z-gold-400); }
+
+/* Fade-up entrance animation */
+@keyframes z-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.z-animate { animation: z-fade-up .35s var(--ease-base) both; }
+.z-animate--d1 { animation-delay: .06s; }
+.z-animate--d2 { animation-delay: .12s; }
+.z-animate--d3 { animation-delay: .18s; }
+.z-animate--d4 { animation-delay: .24s; }
+.z-animate--d5 { animation-delay: .30s; }
+
+/* Typing indicator dots */
+.z-typing { display: flex; align-items: center; gap: 5px; height: 20px; }
+.z-typing__dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--z-blue-400);
+  opacity: .35;
+  animation: z-bounce 1.3s infinite ease-in-out;
+}
+.z-typing__dot:nth-child(1) { animation-delay: 0s; }
+.z-typing__dot:nth-child(2) { animation-delay: .18s; }
+.z-typing__dot:nth-child(3) { animation-delay: .36s; }
+@keyframes z-bounce {
+  0%, 60%, 100% { transform: translateY(0);   opacity: .35; }
+  30%            { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Status dot */
+.z-status { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.z-status--online  { background: var(--z-success); box-shadow: 0 0 0 3px rgba(16,185,129,.2); animation: z-pulse 2.5s infinite; }
+.z-status--offline { background: var(--z-error); }
+.z-status--checking { background: var(--z-warning); animation: z-pulse 1s infinite; }
+@keyframes z-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
+
+/* Divider */
+.z-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: var(--space-4) 0;
+}
+
+/* Nepali slogan badge */
+.z-slogan {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  background: rgba(251,191,36,.08);
+  border: 1px solid rgba(251,191,36,.22);
+  border-radius: var(--radius-pill);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--z-gold-300);
+  letter-spacing: .03em;
+}
+
+/* Avatar */
+.z-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--z-blue-700), var(--z-blue-500));
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 2px solid rgba(37,99,235,.35);
+}
+.z-avatar--gold {
+  background: linear-gradient(135deg, var(--z-gold-600), var(--z-gold-400));
+  color: var(--z-slate-900);
+  border-color: rgba(251,191,36,.35);
+}
+
+/* Gradient text helper */
+.z-gradient-text {
+  background: linear-gradient(135deg, var(--z-blue-600) 0%, var(--z-blue-400) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.z-gradient-text--gold {
+  background: linear-gradient(135deg, var(--z-gold-500) 0%, var(--z-gold-300) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
