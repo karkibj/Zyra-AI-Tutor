@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-// import { X, Plus, User } from 'lucide-react';
+import { X, Plus, User, BookOpen, ArrowRight } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import TopicGrid from '../components/TopicGrid';
 import '../styles/Dashboard.css';
@@ -23,13 +23,11 @@ const Dashboard: React.FC = () => {
   ];
 
   const handleClose = () => {
-    console.log('Close clicked');
-    // Will handle logout later
+    // Close handler — logout to be wired up
   };
 
   const handleProfile = () => {
-    console.log('Profile clicked');
-    // Will navigate to profile page
+    // Profile handler — navigation to be wired up
   };
 
   return (
@@ -41,11 +39,11 @@ const Dashboard: React.FC = () => {
           <div className="neb-badge">NEB</div>
           <div className="header-actions">
             <button className="profile-btn" onClick={handleProfile}>
-              <span className="profile-icon" style={{ marginRight: '6px' }}>👤</span>
+              <User size={16} style={{ marginRight: '6px' }} />
               <span>{userName}</span>
             </button>
             <button className="close-btn" onClick={handleClose}>
-              <span style={{ fontSize: '18px' }}>✖</span>
+              <X size={18} />
             </button>
           </div>
         </header>
@@ -59,12 +57,12 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="mode-selector">
-            <span className="mode-text">📖 Learn any chapters</span>
+            <span className="mode-text"><BookOpen size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} />Learn any chapters</span>
             <button className="add-mode-btn">
-              <span style={{ marginRight: '6px' }}>➕</span>
+              <Plus size={16} style={{ marginRight: '6px' }} />
               <span>Add Mode</span>
             </button>
-            <button className="go-btn">→</button>
+            <button className="go-btn"><ArrowRight size={18} /></button>
           </div>
 
           <p className="nepali-text">केही मिठो पाठ पढ! </p>
