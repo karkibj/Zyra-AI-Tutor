@@ -1,4 +1,4 @@
-// API Service - Enhanced for LangGraph Backend
+// API Service - Enhanced for LangGraph Backend with Auth Support
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 export interface TutorQueryRequest {
@@ -20,8 +20,8 @@ export interface TutorQueryResponse {
   session_id: string;      // NEW - session tracking
   chunk_count: number;
   response_time: number;
-  timestamp: string;       // NEW
-  metadata?: {             // NEW - LangGraph metadata
+  timestamp: string;
+  metadata?: {
     agent_path: string[];
     curriculum_check?: any;
     examples_provided: number;
@@ -36,6 +36,22 @@ export interface ConversationHistory {
   }>;
 }
 
+// ✅ NEW: Helper to get auth headers
+function getAuthHeaders(): HeadersInit {
+  const token = localStorage.getItem('token');
+  
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  
+  // Add Authorization header if token exists
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
+}
+
 export const tutorApi = {
   /**
    * Ask Zyra a question using LangGraph multi-agent workflow
@@ -48,9 +64,7 @@ export const tutorApi = {
     try {
       const response = await fetch(`${API_BASE_URL}/tutor/ask`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),  // ✅ FIXED: Now includes auth token
         body: JSON.stringify({
           question,
           chapter_code: chapterCode,
@@ -76,7 +90,9 @@ export const tutorApi = {
    */
   async getConversationHistory(sessionId: string): Promise<ConversationHistory> {
     try {
-      const response = await fetch(`${API_BASE_URL}/tutor/conversation/${sessionId}`);
+      const response = await fetch(`${API_BASE_URL}/tutor/conversation/${sessionId}`, {
+        headers: getAuthHeaders(),  // ✅ ADDED: Auth for this endpoint too
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -116,3 +132,27 @@ export const tutorApi = {
     }
   },
 };
+
+// ── Lazy solution fetcher — called only when student clicks "Solution Only" ───
+export interface SolutionResponse {
+  solution: string;
+  has_solution: boolean;
+}
+
+export async function fetchSolution(
+  question: string,
+  answer: string,
+  topic?: string
+): Promise<SolutionResponse> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/tutor/solution`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ question, answer, topic }),
+    });
+    if (!res.ok) return { solution: '', has_solution: false };
+    return await res.json();
+  } catch {
+    return { solution: '', has_solution: false };
+  }
+}
