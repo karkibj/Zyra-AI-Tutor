@@ -1,0 +1,796 @@
+/* ============================================================================
+   LANDING PAGE - CLEAN & PROFESSIONAL (NotebookLM inspired)
+   ============================================================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.landing {
+  min-height: 100vh;
+  background: #ffffff;
+  color: #1f2937;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ============================================================================
+   HEADER
+   ============================================================================ */
+
+.lp-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.lp-header-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lp-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #2563eb;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.lp-logo:hover {
+  opacity: 0.8;
+}
+
+.lp-nav {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.lp-nav a {
+  font-size: 15px;
+  font-weight: 500;
+  color: #4b5563;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.lp-nav a:hover {
+  color: #2563eb;
+}
+
+.lp-nav-cta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lp-nav-cta:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.lp-mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #4b5563;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.lp-mobile-menu {
+  display: none;
+}
+
+/* ============================================================================
+   HERO
+   ============================================================================ */
+
+.lp-hero {
+  padding: 120px 24px 80px;
+  background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%);
+  text-align: center;
+}
+
+.lp-hero-wrap {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.lp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 20px;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.lp-hero-title {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #111827;
+  margin-bottom: 20px;
+  letter-spacing: -1px;
+}
+
+.lp-gradient {
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lp-hero-slogan {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fbbf24;
+  margin: 16px auto;
+  letter-spacing: 0.5px;
+}
+
+/* Heart icon inside the slogan */
+.lp-slogan-heart {
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.lp-hero-text {
+  font-size: 20px;
+  line-height: 1.6;
+  color: #6b7280;
+  margin-bottom: 40px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.lp-hero-ctas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 64px;
+}
+
+.lp-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.lp-btn-primary:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+}
+
+.lp-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: white;
+  color: #2563eb;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lp-btn-secondary:hover {
+  border-color: #2563eb;
+  transform: translateY(-2px);
+}
+
+.lp-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  padding: 32px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.lp-stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lp-stat svg {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.lp-stat-num {
+  font-size: 24px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1;
+}
+
+.lp-stat-label {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* ============================================================================
+   SECTIONS
+   ============================================================================ */
+
+.lp-section {
+  padding: 80px 24px;
+}
+
+.lp-section-alt {
+  background: #f9fafb;
+}
+
+.lp-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.lp-section-header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.lp-section-header h2 {
+  font-size: 40px;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+
+.lp-section-header p {
+  font-size: 18px;
+  color: #6b7280;
+}
+
+/* ============================================================================
+   BOARDS
+   ============================================================================ */
+
+.lp-boards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.lp-board {
+  padding: 32px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.lp-board:hover {
+  border-color: #2563eb;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.15);
+}
+
+.lp-board.selected {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.lp-board.coming {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.lp-board-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.lp-board h3 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.lp-board-grade {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.lp-badge-active {
+  padding: 4px 12px;
+  background: #dcfce7;
+  color: #16a34a;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.lp-badge-soon {
+  padding: 4px 12px;
+  background: #fef3c7;
+  color: #d97706;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.lp-board-full {
+  font-size: 14px;
+  color: #2563eb;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.lp-board-desc {
+  font-size: 15px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.lp-board-arrow {
+  position: absolute;
+  bottom: 32px;
+  right: 32px;
+  color: #2563eb;
+  transition: transform 0.2s;
+}
+
+.lp-board:hover .lp-board-arrow {
+  transform: translateX(4px);
+}
+
+/* ============================================================================
+   SUBJECTS
+   ============================================================================ */
+
+.lp-subjects {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.lp-subject {
+  padding: 28px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lp-subject:hover {
+  border-color: #2563eb;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
+}
+
+.lp-subject.coming {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.lp-subject-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  background: #eff6ff;
+  color: #2563eb;
+  border-radius: 12px;
+}
+
+/* Text symbol fallback (∑, ∫, ना) inside subject icon */
+.lp-subject-symbol {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2563eb;
+  line-height: 1;
+}
+
+.lp-subject h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 6px;
+}
+
+.lp-subject p {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.lp-subject-features {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  align-items: flex-start;
+}
+
+.lp-subject-features div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.lp-subject-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  justify-content: center;
+  padding: 10px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lp-subject-btn:hover {
+  background: #1d4ed8;
+}
+
+.lp-subject-soon {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #fef3c7;
+  color: #d97706;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ============================================================================
+   FEATURES
+   ============================================================================ */
+
+.lp-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 32px;
+}
+
+.lp-feature {
+  text-align: center;
+}
+
+.lp-feature-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eff6ff;
+  color: #2563eb;
+  border-radius: 12px;
+}
+
+.lp-feature h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+.lp-feature p {
+  font-size: 15px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+/* ============================================================================
+   HOW IT WORKS
+   ============================================================================ */
+
+.lp-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 32px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.lp-step {
+  text-align: center;
+  position: relative;
+}
+
+.lp-step-num {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2563eb;
+  color: white;
+  font-size: 24px;
+  font-weight: 800;
+  border-radius: 50%;
+}
+
+.lp-step h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.lp-step p {
+  font-size: 15px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.lp-step-arrow {
+  display: none;
+}
+
+/* ============================================================================
+   CTA
+   ============================================================================ */
+
+.lp-cta {
+  padding: 80px 24px;
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  text-align: center;
+}
+
+.lp-cta-wrap {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.lp-cta h2 {
+  font-size: 40px;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 16px;
+}
+
+.lp-cta p {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 32px;
+}
+
+.lp-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 32px;
+  background: white;
+  color: #2563eb;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 16px;
+}
+
+.lp-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.lp-cta-note {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ============================================================================
+   FOOTER
+   ============================================================================ */
+
+.lp-footer {
+  padding: 64px 24px 32px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+.lp-footer-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  gap: 64px;
+  margin-bottom: 48px;
+}
+
+.lp-footer-brand p {
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 12px;
+  line-height: 1.6;
+}
+
+.lp-footer-links {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+
+.lp-footer-links h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+.lp-footer-links a {
+  display: block;
+  font-size: 14px;
+  color: #6b7280;
+  text-decoration: none;
+  margin-bottom: 8px;
+  transition: color 0.2s;
+}
+
+.lp-footer-links a:hover {
+  color: #2563eb;
+}
+
+.lp-footer-bottom {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: 32px;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.lp-footer-bottom p {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .lp-nav {
+    display: none;
+  }
+  
+  .lp-mobile-menu-btn {
+    display: block;
+  }
+  
+  .lp-mobile-menu {
+    display: flex;
+    flex-direction: column;
+    padding: 20px 24px;
+    border-top: 1px solid #e5e7eb;
+  }
+  
+  .lp-mobile-menu a {
+    padding: 12px 0;
+    font-size: 15px;
+    color: #4b5563;
+    text-decoration: none;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  
+  .lp-mobile-cta {
+    margin-top: 12px;
+    padding: 12px 20px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  
+  .lp-hero {
+    padding: 80px 24px 60px;
+  }
+  
+  .lp-hero-title {
+    font-size: 36px;
+  }
+  
+  .lp-hero-text {
+    font-size: 16px;
+  }
+  
+  .lp-hero-ctas {
+    flex-direction: column;
+  }
+  
+  .lp-stats {
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .lp-section {
+    padding: 60px 24px;
+  }
+  
+  .lp-section-header h2 {
+    font-size: 32px;
+  }
+  
+  .lp-footer-wrap {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  
+  .lp-footer-links {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
