@@ -105,9 +105,9 @@ async def upload_content(
                     db.add(mapping)
                     mapped_count += 1
                 else:
-                    print(f"⚠️ Chapter not found: {code}")
+                    print(f" Chapter not found: {code}")
             except Exception as mapping_error:
-                print(f"❌ Error mapping {code}: {mapping_error}")
+                print(f" Error mapping {code}: {mapping_error}")
         
         print(f"✅ Created {mapped_count} chapter mappings")
         
@@ -307,11 +307,116 @@ async def list_content(
                 "content_type": c.content_type,
                 "file_path": c.file_path,
                 "processing_status": c.processing_status,
+                "chunks_count": c.chunks_count or 0,
+                "page_count": c.page_count or 0,
+                "file_size": c.file_size or 0,
                 "created_at": c.created_at.isoformat()
             }
             for c in content_list
         ]
     }
+
+
+
+
+@router.delete("/content/{content_id}")
+async def delete_content(
+    content_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Delete a content item, its curriculum mappings,
+    AND its vectors from the FAISS knowledge base.
+    """
+    try:
+        result = await db.execute(
+            select(Content).where(Content.id == content_id)
+        )
+        content_item = result.scalar_one_or_none()
+
+        if not content_item:
+            raise HTTPException(status_code=404, detail="Content not found")
+
+        content_title = content_item.title
+
+        # Step 1 — Remove vectors from FAISS knowledge base
+        vectors_removed = 0
+        try:
+            import pickle
+            import faiss
+            import numpy as np
+            from pathlib import Path
+
+            meta_file = Path("data/vector_store/metadata.pkl")
+            index_paths = [
+                Path("data/vector_store/faiss.index"),
+                Path("data/vector_store/index.faiss")
+            ]
+            index_path = next((p for p in index_paths if p.exists()), None)
+
+            if meta_file.exists() and index_path:
+                with open(meta_file, 'rb') as f:
+                    all_metadata = pickle.load(f)
+
+                # Separate chunks to keep vs remove
+                keep_meta = [m for m in all_metadata
+                             if m.get('content_id') != content_id]
+                vectors_removed = len(all_metadata) - len(keep_meta)
+
+                if vectors_removed > 0:
+                    # Rebuild FAISS without this content's vectors
+                    old_index = faiss.read_index(str(index_path))
+                    dim = old_index.d
+                    new_index = faiss.IndexFlatL2(dim)
+                    new_metadata = []
+
+                    for meta in keep_meta:
+                        vid = meta.get('vector_id')
+                        if vid is not None and vid < old_index.ntotal:
+                            vec = old_index.reconstruct(int(vid))
+                            new_meta = dict(meta)
+                            new_meta['vector_id'] = len(new_metadata)
+                            new_metadata.append(new_meta)
+                            new_index.add(
+                                np.array([vec], dtype='float32')
+                            )
+
+                    # Save updated index and metadata
+                    faiss.write_index(new_index, str(index_path))
+                    with open(meta_file, 'wb') as f:
+                        pickle.dump(new_metadata, f)
+
+                    print(f"[OK] Removed {vectors_removed} vectors for: {content_title}")
+
+        except Exception as vec_err:
+            # Log but don't fail — DB cleanup still proceeds
+            print(f"[WARN] Vector cleanup partial: {vec_err}")
+
+        # Step 2 — Delete curriculum mappings from DB
+        mappings_result = await db.execute(
+            select(ContentCurriculumMapping).where(
+                ContentCurriculumMapping.content_id == content_item.id
+            )
+        )
+        for mapping in mappings_result.scalars().all():
+            await db.delete(mapping)
+
+        # Step 3 — Delete content record from DB
+        await db.delete(content_item)
+        await db.commit()
+
+        return {
+            "status": "deleted",
+            "id": content_id,
+            "title": content_title,
+            "vectors_removed": vectors_removed
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ============================================================================
@@ -751,6 +856,146 @@ async def view_content(
         raise
     except Exception as e:
         print(f"❌ View error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/knowledge-base/stats")
+async def get_knowledge_base_stats():
+    """Get real-time knowledge base statistics from the vector store."""
+    try:
+        import pickle
+        from pathlib import Path
+        from collections import Counter
+        from app.services.vector_store_service import get_vector_store
+
+        vs = get_vector_store()
+        basic_stats = vs.get_stats()
+
+        metadata_file = Path("data/vector_store/metadata.pkl")
+        if not metadata_file.exists():
+            return {"error": "Vector store not found", "total_vectors": 0}
+
+        with open(metadata_file, "rb") as f:
+            metadata = pickle.load(f)
+
+        type_counts = Counter(m.get("content_type", "unknown") for m in metadata)
+        chapter_counts = Counter(
+            m.get("chapter", "Untagged")
+            for m in metadata
+            if m.get("content_type") == "curriculum"
+        )
+
+        # SEE marks per chapter (from test specification grid 2078)
+        # Stored here as single source of truth until exam_specifications table is populated
+        SEE_MARKS_BY_CODE = {
+            "CDC-10-MATH-CH01": 6,  "CDC-10-MATH-CH02": 5,
+            "CDC-10-MATH-CH03": 4,  "CDC-10-MATH-CH04": 4,
+            "CDC-10-MATH-CH05": 8,  "CDC-10-MATH-CH06": 5,
+            "CDC-10-MATH-CH07": 5,  "CDC-10-MATH-CH08": 5,
+            "CDC-10-MATH-CH09": 5,  "CDC-10-MATH-CH10": 5,
+            "CDC-10-MATH-CH11": 4,  "CDC-10-MATH-CH12": 4,
+            "CDC-10-MATH-CH13": 6,  "CDC-10-MATH-CH14": 5,
+            "CDC-10-MATH-CH15": 4,
+        }
+
+        # Get chapter names and codes from DB — single source of truth
+        from app.models.curriculum import CurriculumNode
+        from app.db import get_db_session
+        async with get_db_session() as db_session:
+            ch_result = await db_session.execute(
+                select(CurriculumNode)
+                .where(CurriculumNode.code.like("CDC-10-MATH-CH%"))
+                .where(CurriculumNode.active == True)
+                .order_by(CurriculumNode.order_num)
+            )
+            db_chapters = ch_result.scalars().all()
+
+        chapters = []
+        for ch in db_chapters:
+            count = chapter_counts.get(ch.name, 0)
+            health = "good" if count >= 30 else "moderate" if count >= 10 else "low"
+            chapters.append({
+                "name": ch.name,
+                "code": ch.code,
+                "see_marks": SEE_MARKS_BY_CODE.get(ch.code, 0),
+                "chunk_count": count,
+                "health": health,
+            })
+
+        garbled = sum(
+            1 for m in metadata
+            if m.get("content_type") == "model_question" and not m.get("chapter")
+        )
+        total_tagged = sum(1 for m in metadata if m.get("chapter"))
+
+        return {
+            "total_vectors": basic_stats["total_vectors"],
+            "total_tagged": total_tagged,
+            "total_untagged": basic_stats["total_vectors"] - total_tagged,
+            "by_content_type": dict(type_counts),
+            "chapters": chapters,
+            "garbled_chunks": garbled,
+            "index_size_mb": round(basic_stats.get("index_file_size", 0) / 1024 / 1024, 1),
+        }
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e), "total_vectors": 0}
+
+@router.get("/users/list")
+async def list_users(db: AsyncSession = Depends(get_db)):
+    """List all registered users with activity stats."""
+    try:
+        from app.models.user import User
+        from app.models.chat import ChatConversation
+        from app.models.progress import TopicMastery
+        from sqlalchemy import func
+
+        result = await db.execute(
+            select(User).order_by(User.created_at.desc())
+        )
+        users = result.scalars().all()
+
+        user_list = []
+        for u in users:
+            # Chat count
+            chat_result = await db.execute(
+                select(func.count(ChatConversation.id)).where(
+                    ChatConversation.user_id == u.id
+                )
+            )
+            chat_count = chat_result.scalar() or 0
+
+            # Topics practiced
+            mastery_result = await db.execute(
+                select(func.count(TopicMastery.id)).where(
+                    TopicMastery.user_id == u.id
+                )
+            )
+            topics_count = mastery_result.scalar() or 0
+
+            user_list.append({
+                "id": u.id,
+                "email": u.email,
+                "full_name": u.full_name or "Unknown",
+                "role": u.role,
+                "provider": u.provider,
+                "is_active": u.is_active,
+                "chat_count": chat_count,
+                "topics_practiced": topics_count,
+                "created_at": u.created_at.isoformat() if u.created_at else None,
+            })
+
+        return {
+            "total": len(user_list),
+            "students": len([u for u in user_list if u["role"] == "student"]),
+            "admins": len([u for u in user_list if u["role"] == "admin"]),
+            "users": user_list
+        }
+
+    except Exception as e:
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
